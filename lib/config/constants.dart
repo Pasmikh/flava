@@ -9,6 +9,8 @@ class AppConstants {
   static const double defaultTurnLength = 6.0;
   static const double timerTickDuration = 0.1;
   static const int minRoundForStrategicEvents = 6;
+  static const double turnLengthReductionByPlayersCount = 0.2;
+  static const double turnLengthIncrement = 0.1;
   
   // Asset paths
   static const String soundsPath = 'assets/sounds/';

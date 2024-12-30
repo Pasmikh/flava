@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import '../models/player.dart';
 import '../models/game_mode.dart';
-import 'game_logic.dart';
+import './game_logic.dart';
 
 enum EventType {
   get,

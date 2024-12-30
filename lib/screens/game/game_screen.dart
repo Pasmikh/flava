@@ -79,6 +79,7 @@ class GameScreen extends StatelessWidget {
                           // Object display
                           ObjectDisplay(
                             objectName: gameState.currentObject,
+                            objectColor: gameState.currentObjectColor,
                           ),
                           
                           // Event buttons (when needed)

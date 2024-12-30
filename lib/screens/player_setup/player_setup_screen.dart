@@ -40,20 +40,12 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
     });
   }
 
-  void _clearPlayers() {
-    setState(() {
-      _playerNames.clear();
-      _playerNameController.clear();
-    });
-  }
-
   void _startGame(GameMode mode) {
     if (_playerNames.length >= minPlayers) {
       final gameState = context.read<GameState>();
       gameState.initializeGame(
         playerNames: _playerNames,
         gameMode: mode,
-        initialTurnLength: GameModeConfig.getInitialTurnLength(mode, _playerNames.length),
       );
       Navigator.pushReplacementNamed(context, AppRoutes.readyCheck);
     }
@@ -69,11 +61,17 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              // Header
+              Text(
+                'Enter Player Names',
+                style: FlavaTheme.headerStyle,
+              ),
+              const SizedBox(height: 16),
               // Player name input field
               TextField(
                 controller: _playerNameController,
                 decoration: InputDecoration(
-                  hintText: 'Enter player name',
+                  hintText: 'Player name',
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.add),
                     onPressed: canAddPlayer ? _addPlayer : null,
@@ -103,18 +101,27 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                 ),
               ),
 
-              // Action buttons
-              if (_playerNames.isNotEmpty) ...[
-                ElevatedButton(
-                  onPressed: _clearPlayers,
-                  child: const Text('Clear All Players'),
-                ),
+              // Hint if not enough players
+              if (_playerNames.length < minPlayers) ...[
                 const SizedBox(height: 16),
+                Text(
+                  'Add at least $minPlayers players to start the game',
+                  style: FlavaTheme.textStyle,
+                ),
               ],
+
+              // Action buttons
+              // if (_playerNames.isNotEmpty) ...[
+              //   ElevatedButton(
+              //     onPressed: _clearPlayers,
+              //     child: const Text('Clear All Players'),
+              //   ),
+              //   const SizedBox(height: 16),
+              // ],
 
               // Game mode selection
               if (_playerNames.length >= minPlayers) ...[
-                const Text(
+                Text(
                   'Select Game Mode',
                   style: FlavaTheme.headerStyle,
                 ),
@@ -123,16 +130,16 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _GameModeButton(
-                      mode: GameMode.beginner,
-                      onPressed: () => _startGame(GameMode.beginner),
+                      modeName: BeginnerGameMode().name,
+                      onPressed: () => _startGame(BeginnerGameMode()),
                     ),
                     _GameModeButton(
-                      mode: GameMode.fun,
-                      onPressed: () => _startGame(GameMode.fun),
+                      modeName: FunGameMode().name,
+                      onPressed: () => _startGame(FunGameMode()),
                     ),
                     _GameModeButton(
-                      mode: GameMode.master,
-                      onPressed: () => _startGame(GameMode.master),
+                      modeName: MasterGameMode().name,
+                      onPressed: () => _startGame(MasterGameMode()),
                     ),
                   ],
                 ),
@@ -146,11 +153,11 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
 }
 
 class _GameModeButton extends StatelessWidget {
-  final GameMode mode;
+  final String modeName;
   final VoidCallback onPressed;
 
   const _GameModeButton({
-    required this.mode,
+    required this.modeName,
     required this.onPressed,
   });
 
@@ -163,7 +170,7 @@ class _GameModeButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       ),
       child: Text(
-        GameModeConfig.displayNames[mode]!,
+        modeName,
         style: const TextStyle(
           color: Colors.white,
           fontSize: 16,

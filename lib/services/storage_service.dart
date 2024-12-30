@@ -70,7 +70,7 @@ class StorageService {
     
     final eventData = [
       getUserId(),
-      getLastGameId() + 1,
+      await getLastGameId() + 1,
       turnRound,
       playerId,
       playerName,

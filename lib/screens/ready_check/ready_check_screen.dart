@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/game_state.dart';
-import '../config/theme.dart';
-import '../config/routes.dart';
+import '../../config/theme.dart';
+import '../../config/routes.dart';
 
 class ReadyCheckScreen extends StatelessWidget {
   const ReadyCheckScreen({super.key});
@@ -25,7 +25,7 @@ class ReadyCheckScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       'Get Ready!',
                       style: FlavaTheme.headerStyle,
                     ),
@@ -36,7 +36,7 @@ class ReadyCheckScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 32),
                     Text(
-                      'Game Mode: ${GameModeConfig.displayNames[gameState.gameMode]}',
+                      'Game Mode: ${gameState.gameMode.name}',
                       style: FlavaTheme.textStyle,
                     ),
                     const SizedBox(height: 48),

@@ -16,7 +16,7 @@ class PlayerDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: MediaQuery.of(context).size.height * 0.24,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -56,40 +56,8 @@ class PlayerDisplay extends StatelessWidget {
               ),
             ),
           ),
-
-          // Optional indicators for object counts
-          if (!isTop) // Only show on bottom display
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              height: 24,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildObjectCounter('🟢', player.greenObjects.values.fold(0, (a, b) => a + b)),
-                  _buildObjectCounter('🔴', player.redObjects.values.fold(0, (a, b) => a + b)),
-                  _buildObjectCounter('🔑', player.keyObjectCount),
-                ],
-              ),
-            ),
         ],
       ),
-    );
-  }
-
-  Widget _buildObjectCounter(String symbol, int count) {
-    return Row(
-      children: [
-        Text(symbol, style: const TextStyle(fontSize: 16)),
-        const SizedBox(width: 4),
-        Text(
-          count.toString(),
-          style: TextStyle(
-            color: FlavaTheme.textColor,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
     );
   }
 }

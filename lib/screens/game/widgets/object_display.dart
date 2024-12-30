@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flava/config/theme.dart';
 
 class ObjectDisplay extends StatefulWidget {
   final String objectName;
+  final Color objectColor;
 
   const ObjectDisplay({
     super.key,
     required this.objectName,
+    required this.objectColor,
   });
 
   @override
@@ -52,8 +55,8 @@ class _ObjectDisplayState extends State<ObjectDisplay> with SingleTickerProvider
 
   String _getImagePath() {
     // Extract color and object type from the objectName
-    final isRed = widget.objectName.toLowerCase().contains('красный');
-    final isGreen = widget.objectName.toLowerCase().contains('зеленый');
+    final isRed = widget.objectColor == FlavaTheme.redObjectColor;
+    final isGreen = widget.objectColor == FlavaTheme.greenObjectColor;
     
     // Map object names to image paths
     final objectMap = {
@@ -81,7 +84,7 @@ class _ObjectDisplayState extends State<ObjectDisplay> with SingleTickerProvider
     String baseObject = objectMap[objectKey]!;
     String color = isRed ? 'red' : (isGreen ? 'green' : '');
     
-    return 'assets/images/${color}/${baseObject}.jpg';
+    return 'assets/images/${baseObject}_$color.jpg';
   }
 
   @override

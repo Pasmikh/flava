@@ -3,13 +3,11 @@ import 'package:flutter/foundation.dart';
 import '../models/player.dart';
 import '../models/game_mode.dart';
 import '../services/audio_service.dart';
-import '../services/analytics_service.dart';
 import '../services/storage_service.dart';
 
 class GameProvider extends ChangeNotifier {
   // Services
   final AudioService _audioService;
-  final AnalyticsService _analyticsService;
   final StorageService _storageService;
   
   // Game State
@@ -21,25 +19,17 @@ class GameProvider extends ChangeNotifier {
   Timer? _gameTimer;
   
   // Timer State
-  double _baseTurnLength = 6.0;
+  double _baseTurnLength = 6.0; // To be calculated based on game mode
   double _currentTurnTimeLeft = 6.0;
   double _additionalTime = 0.0;
   bool _isPaused = false;
   
   // Game Objects and Events
   String _currentObject = '';
-  String _previousObject = '';
   List<String> _eventChoices = [];
   String? _eventDescription;
   bool _isEventActive = false;
   final List<Map<String, dynamic>> _strategicEvents = [];
-  
-  // Event Probabilities
-  double _getEventChance = 0.0;
-  double _dropEventChance = 0.0;
-  double _otherEventChance = 0.0;
-  double _getMidgameEventChance = 0.0;
-  double _strategicEventChance = 0.0;
 
   // Game ID and tracking
   late int _gameId;
@@ -47,10 +37,8 @@ class GameProvider extends ChangeNotifier {
   
   GameProvider({
     required AudioService audioService,
-    required AnalyticsService analyticsService,
     required StorageService storageService,
   })  : _audioService = audioService,
-        _analyticsService = analyticsService,
         _storageService = storageService {
     _initializeTracking();
   }
@@ -84,7 +72,6 @@ class GameProvider extends ChangeNotifier {
     _baseTurnLength = initialTurnLength;
     _currentTurnTimeLeft = initialTurnLength;
     _currentPlayerIndex = DateTime.now().millisecondsSinceEpoch % _players.length;
-    _initializeEventProbabilities();
     notifyListeners();
   }
 
@@ -130,7 +117,6 @@ class GameProvider extends ChangeNotifier {
   Future<void> _handleTurnEnd() async {
     _gameTimer?.cancel();
     await _audioService.playEndTurn();
-    _previousObject = _currentObject;
     
     if (_checkWinCondition()) {
       await _endGame();
@@ -163,7 +149,7 @@ class GameProvider extends ChangeNotifier {
   Future<void> _startNewRound() async {
     _currentRound++;
     _processStrategicEvents();
-    _adjustTurnLength();
+    _updateBaseTurnLength();
     
     await _storageService.logGameEvent(
       turnRound: _currentRound,
@@ -172,12 +158,6 @@ class GameProvider extends ChangeNotifier {
       event: 'round_start',
       extra: _currentRound.toString(),
     );
-  }
-
-  void _adjustTurnLength() {
-    if (_gameMode != GameMode.master) {
-      _baseTurnLength = (_baseTurnLength + 0.2).clamp(0.0, 7.0);
-    }
   }
 
   void _generateNewObject() {
@@ -219,35 +199,14 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _initializeEventProbabilities() {
-    switch (_gameMode) {
-      case GameMode.beginner:
-        _getEventChance = 0.02;
-        _dropEventChance = 0.02;
-        _otherEventChance = 0.01;
-        _getMidgameEventChance = 0.0;
-        _strategicEventChance = 0.0;
-        break;
-      case GameMode.fun:
-        _getEventChance = 0.012;
-        _dropEventChance = 0.01;
-        _otherEventChance = 0.015;
-        _getMidgameEventChance = 0.007;
-        _strategicEventChance = 0.007;
-        break;
-      case GameMode.master:
-        _getEventChance = 0.015;
-        _dropEventChance = 0.01;
-        _otherEventChance = 0.015;
-        _getMidgameEventChance = 0.007;
-        _strategicEventChance = 0.007;
-        break;
-    }
-  }
-
   void _resetTurnTimer() {
     _currentTurnTimeLeft = _baseTurnLength;
     _additionalTime = 0.0;
+    notifyListeners();
+  }
+
+  void _updateBaseTurnLength() {
+    _baseTurnLength = _gameMode.calculateTurnLength(_players.length, _currentRound);
     notifyListeners();
   }
 
@@ -279,15 +238,6 @@ class GameProvider extends ChangeNotifier {
       'winner_id': currentPlayer.id,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     });
-    
-    _analyticsService.recordGameResult(
-      gameId: _gameId,
-      userId: _userId,
-      gameMode: _gameMode,
-      players: _players,
-      maxRound: _currentRound,
-      winnerId: currentPlayer.id,
-    );
   }
 
   @override

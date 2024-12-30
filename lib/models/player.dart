@@ -11,11 +11,13 @@ class Player {
   int keyObjectCount = 0;
   
   // Event counts
-  int getEvents = 0;
-  int dropEvents = 0;
-  int otherEvents = 0;
-  int getMidgameEvents = 0;
-  int strategicEvents = 0;
+  Map<String, int> eventCounts = {
+    'get': 0,
+    'drop': 0,
+    'other': 0,
+    'getMidgame': 0,
+    'strategic': 0,
+  };
 
   Player({
     required this.name,
@@ -67,11 +69,11 @@ class Player {
       'greenObjects': greenObjects,
       'redObjects': redObjects,
       'keyObjectCount': keyObjectCount,
-      'getEvents': getEvents,
-      'dropEvents': dropEvents,
-      'otherEvents': otherEvents,
-      'getMidgameEvents': getMidgameEvents,
-      'strategicEvents': strategicEvents,
+      'getEvents': eventCounts['get'],
+      'dropEvents': eventCounts['drop'],
+      'otherEvents': eventCounts['other'],
+      'getMidgameEvents': eventCounts['getMidgame'],
+      'strategicEvents': eventCounts['strategic'],
     };
   }
 
@@ -83,11 +85,11 @@ class Player {
     player.greenObjects = Map<String, int>.from(json['greenObjects']);
     player.redObjects = Map<String, int>.from(json['redObjects']);
     player.keyObjectCount = json['keyObjectCount'];
-    player.getEvents = json['getEvents'];
-    player.dropEvents = json['dropEvents'];
-    player.otherEvents = json['otherEvents'];
-    player.getMidgameEvents = json['getMidgameEvents'];
-    player.strategicEvents = json['strategicEvents'];
+    player.eventCounts['get'] = json['getEvents'];
+    player.eventCounts['drop'] = json['dropEvents'];
+    player.eventCounts['other'] = json['otherEvents'];
+    player.eventCounts['getMidgame'] = json['getMidgameEvents'];
+    player.eventCounts['strategic'] = json['strategicEvents'];
     return player;
   }
 }

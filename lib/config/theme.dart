@@ -62,11 +62,9 @@ class FlavaTheme {
         primary: primaryColor,
         secondary: accentColor,
         surface: Colors.white,
-        background: secondaryColor,
         onPrimary: textColorLight,
         onSecondary: textColorLight,
         onSurface: textColor,
-        onBackground: textColor,
       ),
       
       // Button themes
