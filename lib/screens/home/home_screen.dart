@@ -81,7 +81,7 @@ class HomeScreen extends StatelessWidget {
                 Text(
                   'Version ${AppConstants.appVersion}',
                   style: FlavaTheme.textStyle.copyWith(
-                    color: FlavaTheme.textColor.withOpacity(0.6),
+                    color: FlavaTheme.textColor.withAlpha(150),
                   ),
                 ),
                 

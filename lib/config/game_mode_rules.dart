@@ -4,7 +4,8 @@ enum GameModeType { beginner, fun, master }
 const Map<GameModeType, Map<String, dynamic>> gameModeRules = {
   GameModeType.beginner: {
     'name': 'Learn',
-    'description': 'Perfect for first-time players. Slower pace and helpful prompts.',
+    'description':
+        'Perfect for first-time players. Slower pace and helpful prompts.',
     'startTurnLength': 8.0,
     'endTurnLength': 7.0,
     'getEventProbability': 0.02,
@@ -17,13 +18,13 @@ const Map<GameModeType, Map<String, dynamic>> gameModeRules = {
     'minRoundsForFinalKeyObject': 12,
     'keyProbabilityGrowthRounds': 7,
     'requiresEventConfirmation': true,
-    'allowsStrategicEvents': false,
     'minRoundForStrategicEvents': 999,
     'additionalTimeForEvents': 3.0,
   },
   GameModeType.fun: {
     'name': 'Have Fun',
-    'description': 'Balanced gameplay with exciting events. Recommended for casual players.',
+    'description':
+        'Balanced gameplay with exciting events. Recommended for casual players.',
     'startTurnLength': 6.0,
     'endTurnLength': 7.0,
     'getEventProbability': 0.012,
@@ -35,14 +36,14 @@ const Map<GameModeType, Map<String, dynamic>> gameModeRules = {
     'requiredKeyObjectsToWin': 4,
     'minRoundsForFinalKeyObject': 12,
     'keyProbabilityGrowthRounds': 7,
-    'requiresEventConfirmation': false,
-    'allowsStrategicEvents': true,
+    'requiresEventConfirmation': true,
     'minRoundForStrategicEvents': 6,
     'additionalTimeForEvents': 2.0,
   },
   GameModeType.master: {
     'name': 'Master',
-    'description': 'Challenging gameplay with complex strategic events. For experienced players.',
+    'description':
+        'Challenging gameplay with complex strategic events. For experienced players.',
     'startTurnLength': 6.8,
     'endTurnLength': 6.2,
     'getEventProbability': 0.01,
@@ -55,7 +56,6 @@ const Map<GameModeType, Map<String, dynamic>> gameModeRules = {
     'minRoundsForFinalKeyObject': 12,
     'keyProbabilityGrowthRounds': 7,
     'requiresEventConfirmation': false,
-    'allowsStrategicEvents': true,
     'minRoundForStrategicEvents': 6,
     'additionalTimeForEvents': 1.5,
   },

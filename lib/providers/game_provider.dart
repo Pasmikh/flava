@@ -1,84 +1,124 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import '../models/player.dart';
+
 import '../models/game_mode.dart';
-import '../services/audio_service.dart';
+import '../models/player.dart';
 import '../services/storage_service.dart';
+import '../services/audio_service.dart';
+import '../models/game_state.dart';
+import '../models/game_event.dart';
+import '../services/game_logic.dart';
+import '../services/event_handler.dart';
+import '../services/logging_service.dart';
+
+enum GameStatus {
+  initial,
+  ready,
+  playing,
+  paused,
+  eventChoice,
+  gameOver,
+}
 
 class GameProvider extends ChangeNotifier {
-  // Services
+  late GameState _state;
+
+  final LoggingService _loggingService = LoggingService();
   final AudioService _audioService;
   final StorageService _storageService;
-  
-  // Game State
-  List<Player> _players = [];
-  late GameMode _gameMode;
-  int _currentPlayerIndex = 0;
-  int _currentRound = 1;
-  bool _isClockwise = true;
   Timer? _gameTimer;
-  
-  // Timer State
-  double _baseTurnLength = 6.0; // To be calculated based on game mode
-  double _currentTurnTimeLeft = 6.0;
-  double _additionalTime = 0.0;
-  bool _isPaused = false;
-  
-  // Game Objects and Events
-  String _currentObject = '';
-  List<String> _eventChoices = [];
-  String? _eventDescription;
-  bool _isEventActive = false;
-  final List<Map<String, dynamic>> _strategicEvents = [];
-
-  // Game ID and tracking
   late int _gameId;
   late int _userId;
-  
+
   GameProvider({
     required AudioService audioService,
     required StorageService storageService,
   })  : _audioService = audioService,
-        _storageService = storageService {
-    _initializeTracking();
+        _storageService = storageService,
+        _state = GameState(
+          gameMode: BeginnerGameMode(),
+          players: [],
+        ) {
+    // _initializeTracking();
   }
 
   // Getters
-  List<Player> get players => _players;
-  GameMode get gameMode => _gameMode;
-  Player get currentPlayer => _players[_currentPlayerIndex];
-  int get currentRound => _currentRound;
-  bool get isClockwise => _isClockwise;
-  double get turnTimeLeft => _currentTurnTimeLeft;
-  double get turnProgress => _currentTurnTimeLeft / (_baseTurnLength + _additionalTime);
-  String get currentObject => _currentObject;
-  bool get isPaused => _isPaused;
-  List<String> get eventChoices => _eventChoices;
-  String? get eventDescription => _eventDescription;
-  bool get isEventActive => _isEventActive;
+  GameState get state => _state;
+  List<Player> get players => _state.players;
+  Player get currentPlayer => _state.players[_state.currentPlayerIndex];
+  bool get isPaused => _state.status == GameStatus.paused;
 
-  Future<void> _initializeTracking() async {
-    _userId = _storageService.getUserId();
-    _gameId = await _storageService.getLastGameId() + 1;
-  }
+  // Future<void> _initializeTracking() async {
+  //   _userId = _storageService.getUserId();
+  //   _gameId = await _storageService.getLastGameId() + 1;
+  // }
 
-  Future<void> initializeGame({
+  void initializeGame({
     required List<String> playerNames,
     required GameMode gameMode,
-    double initialTurnLength = 6.0,
-  }) async {
-    _players = playerNames.map((name) => Player(name: name)).toList();
-    _gameMode = gameMode;
-    _baseTurnLength = initialTurnLength;
-    _currentTurnTimeLeft = initialTurnLength;
-    _currentPlayerIndex = DateTime.now().millisecondsSinceEpoch % _players.length;
+  }) {
+    final players = playerNames.map((name) => Player(name: name)).toList();
+    final turnTimeLeft = gameMode.calculateTurnLength(players.length);
+    final currentPlayerIndex =
+        DateTime.now().millisecondsSinceEpoch % players.length;
+
+    _state = _state.copyWith(GameStateUpdate(
+      gameMode: gameMode,
+      players: players,
+      currentPlayerIndex: currentPlayerIndex,
+      turnTimeLeft: turnTimeLeft,
+      status: GameStatus.ready,
+      clearCurrentObject: true,
+      clearCurrentObjectColor: true,
+      clearCurrentEvent: true,
+      clearCurrentChoice: true,
+      choices: [],
+    ));
+
     notifyListeners();
   }
 
+  void setupTestGame() {
+    initializeGame(
+      playerNames: ['Andy', 'Bob', 'Celene'],
+      gameMode: FunGameMode(),
+    );
+  }
+
   void startGame() {
-    if (!_isPaused) {
+    if (_state.status == GameStatus.ready) {
+      _state = _state.copyWith(GameStateUpdate(
+        status: GameStatus.playing,
+      ));
       _startTimer();
-      _generateNewObject();
+      _generateNewTurn();
+      notifyListeners();
+    }
+  }
+
+  void togglePause() {
+    if (_state.status == GameStatus.playing) {
+      _gameTimer?.cancel();
+      _state = _state.copyWith(GameStateUpdate(
+        status: GameStatus.paused,
+      ));
+    } else if (_state.status == GameStatus.paused) {
+      _startTimer();
+      _state = _state.copyWith(GameStateUpdate(
+        status: GameStatus.playing,
+      ));
+    }
+    notifyListeners();
+  }
+
+  void endTurn() {
+    if (_state.status == GameStatus.playing) {
+      if (_state.status == GameStatus.playing) {
+        _state = _state.copyWith(GameStateUpdate(
+          turnTimeLeft: 0.1,
+        ));
+        notifyListeners();
+      }
     }
   }
 
@@ -91,33 +131,53 @@ class GameProvider extends ChangeNotifier {
   }
 
   void _handleTimerTick(Timer timer) async {
-    if (_currentTurnTimeLeft <= 0) {
+    if (_state.status == GameStatus.eventChoice) {
+      return;
+    }
+
+    if (_state.turnTimeLeft <= 0) {
       await _handleTurnEnd();
     } else {
-      _currentTurnTimeLeft -= 0.1;
-      _playHeartbeatSounds();
+      final newTimeLeft = _state.turnTimeLeft - 0.1;
+      _state = _state.copyWith(GameStateUpdate(
+        turnTimeLeft: newTimeLeft,
+      ));
+      await _playHeartbeatSounds();
       notifyListeners();
     }
   }
 
   Future<void> _playHeartbeatSounds() async {
-    await _audioService.playHeartbeat(_currentTurnTimeLeft);
-  }
-
-  void togglePause() {
-    if (_isPaused) {
-      _startTimer();
-    } else {
-      _gameTimer?.cancel();
-    }
-    _isPaused = !_isPaused;
-    notifyListeners();
+    await _audioService.playHeartbeat(_state.turnTimeLeft);
   }
 
   Future<void> _handleTurnEnd() async {
+    _loggingService.log(
+      'turn_end',
+      data: {
+        'player': currentPlayer.name,
+        'round': _state.currentRound,
+        'objects_count': {
+          'red': currentPlayer.redObjects,
+          'green': currentPlayer.greenObjects,
+          'key': currentPlayer.keyObjectCount,
+        },
+      },
+    );
+
     _gameTimer?.cancel();
     await _audioService.playEndTurn();
-    
+
+    // Handle any pending event before ending the turn
+    if (_state.status == GameStatus.eventChoice &&
+        _state.currentEvent != null) {
+      final newState = _state.currentEvent!.execute(_state, 0);
+      // Make sure to reset the status to playing
+      _state = newState.copyWith(GameStateUpdate(
+        status: GameStatus.playing,
+      ));
+    }
+
     if (_checkWinCondition()) {
       await _endGame();
       return;
@@ -125,43 +185,69 @@ class GameProvider extends ChangeNotifier {
 
     if (_shouldStartNewRound()) {
       await _startNewRound();
-    } else {
-      _moveToNextPlayer();
     }
-    
-    _resetTurnTimer();
-    _generateNewObject();
+
+    _moveToNextPlayer();
+    _resetTurn();
+    _generateNewTurn();
+    _startTimer();
+
     notifyListeners();
   }
 
   void _moveToNextPlayer() {
-    if (_isClockwise) {
-      _currentPlayerIndex = (_currentPlayerIndex + 1) % _players.length;
-    } else {
-      _currentPlayerIndex = (_currentPlayerIndex - 1 + _players.length) % _players.length;
-    }
+    final newIndex = _state.turnRotationClockwise
+        ? (_state.currentPlayerIndex + 1) % _state.players.length
+        : (_state.currentPlayerIndex - 1 + _state.players.length) %
+            _state.players.length;
+
+    _state = _state.copyWith(GameStateUpdate(
+      currentPlayerIndex: newIndex,
+    ));
   }
 
   bool _shouldStartNewRound() {
-    return (_currentPlayerIndex + (_isClockwise ? 1 : -1)) % _players.length == 0;
+    return (_state.currentPlayerIndex +
+                (_state.turnRotationClockwise ? 1 : -1)) %
+            _state.players.length ==
+        0;
   }
 
   Future<void> _startNewRound() async {
-    _currentRound++;
-    _processStrategicEvents();
-    _updateBaseTurnLength();
-    
-    await _storageService.logGameEvent(
-      turnRound: _currentRound,
-      playerId: currentPlayer.id,
-      playerName: currentPlayer.name,
-      event: 'round_start',
-      extra: _currentRound.toString(),
-    );
+    final newRound = _state.currentRound + 1;
+    _state = _state.copyWith(GameStateUpdate(
+      currentRound: newRound,
+    ));
+
+    // await _storageService.logGameEvent(
+    //   turnRound: newRound,
+    //   playerId: currentPlayer.id,
+    //   playerName: currentPlayer.name,
+    //   event: 'round_start',
+    //   extra: newRound.toString(),
+    // );
   }
 
-  void _generateNewObject() {
-    final event = _calculateEvent();
+  void _resetTurn() {
+    final newTurnLength = _state.gameMode.calculateTurnLength(
+      _state.players.length,
+      _state.currentRound,
+    );
+
+    _state = _state.copyWith(GameStateUpdate(
+      turnTimeLeft: newTurnLength,
+      additionalTime: 0.0,
+      clearCurrentObject: true,
+      clearCurrentObjectColor: true,
+      clearCurrentEvent: true,
+      clearCurrentChoice: true,
+      choices: [],
+    ));
+  }
+
+  void _generateNewTurn() {
+    final GameEvent? event = EventManager.rollEvent(_state);
+
     if (event != null) {
       _handleEvent(event);
     } else {
@@ -169,75 +255,141 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
-  String? _calculateEvent() {
-    // Event probability calculations based on game mode
-    // Returns event type or null if no event should occur
-    return null; // Placeholder
+  void _handleEvent(GameEvent event) {
+    // Log event
+    _loggingService.log(
+      'event_triggered',
+      data: {
+        'event_type': event.type.toString(),
+        'description': event.description,
+        'player': currentPlayer.name,
+        'round': _state.currentRound,
+        'choices': event.getChoices(),
+      },
+    );
+
+    // Pause the game timer when event triggers in fun mode
+    _gameTimer?.cancel();
+
+    _state = _state.copyWith(GameStateUpdate(
+      currentEvent: event,
+      choices: event.getChoices(),
+      status: GameStatus.eventChoice,
+      additionalTime: _state.additionalTime + event.additionalTime,
+      turnTimeLeft: _state.turnTimeLeft + event.additionalTime,
+    ));
+
+    // If the event doesn't require confirmation, execute it immediately
+    if (!event.requiresConfirmation) {
+      final newState = event.execute(_state, 0);
+      _state = newState.copyWith(GameStateUpdate(
+        status: GameStatus.playing,
+        currentChoice: event.choices.displayNames[0],
+        choices: [],
+      ));
+      _startTimer();
+    }
+
+    notifyListeners();
   }
 
-  void _handleEvent(String eventType) {
-    // Handle different event types
-    // This will be implemented based on the original game's event system
+  void handleEventChoice(int choice) {
+    if (_state.status == GameStatus.eventChoice &&
+        _state.currentEvent != null) {
+      final event = _state.currentEvent!;
+
+      // Log the event choice
+      _loggingService.log(
+        'event_choice',
+        data: {
+          'event_type': event.type.toString(),
+          'description': event.description,
+          'choice_index': choice,
+          'choice_text': event.choices.displayNames[choice],
+          'player': currentPlayer.name,
+          'round': _state.currentRound,
+        },
+      );
+
+      // Execute event and get new state
+      final GameState newState = event.execute(_state, choice);
+
+      // Update state with event results and reset event status
+      _state = newState.copyWith(GameStateUpdate(
+        status: GameStatus.playing,
+        currentChoice: event.choices.displayNames[choice],
+        choices: [],
+      ));
+
+      // Start the game timer again
+      _startTimer();
+
+      notifyListeners();
+    }
   }
 
   void _generateRandomObject() {
-    // Generate random object based on game rules
-    // This will be implemented based on the original game's object system
+    final (object, color) = GameLogic.generateRandomObject(
+      keyProbability: _state.gameMode.calculateKeyProbability(
+        _state.currentRound,
+        currentPlayer.keyObjectCount,
+      ),
+      greenProbability: GameLogic.calculateGreenProbability(currentPlayer),
+      previousObject: _state.currentObject,
+    );
+
+    _loggingService.log(
+      'generate_object',
+      data: {
+        'object': object,
+        'player': currentPlayer.name,
+        'round': _state.currentRound,
+      },
+    );
+
+    _state = _state.copyWith(GameStateUpdate(
+      currentObject: object,
+      currentObjectColor: color,
+    ));
   }
 
   bool _checkWinCondition() {
-    return currentPlayer.keyObjectCount >= 4;
+    return currentPlayer.keyObjectCount >=
+        _state.gameMode.requiredKeyObjectsToWin;
   }
 
   Future<void> _endGame() async {
     _gameTimer?.cancel();
-    currentPlayer.isWinner = true;
+
+    final updatedPlayers = List<Player>.from(_state.players);
+    updatedPlayers[_state.currentPlayerIndex].isWinner = true;
+
+    _state = _state.copyWith(GameStateUpdate(
+      status: GameStatus.gameOver,
+      players: updatedPlayers,
+      clearCurrentEvent: true,
+      clearCurrentObject: true,
+      clearCurrentObjectColor: true,
+      clearCurrentChoice: true,
+      choices: [],
+    ));
+
     await _audioService.playWin();
-    
-    // Record game results
     await _recordGameEnd();
-    notifyListeners();
-  }
 
-  void _resetTurnTimer() {
-    _currentTurnTimeLeft = _baseTurnLength;
-    _additionalTime = 0.0;
     notifyListeners();
-  }
-
-  void _updateBaseTurnLength() {
-    _baseTurnLength = _gameMode.calculateTurnLength(_players.length, _currentRound);
-    notifyListeners();
-  }
-
-  void _processStrategicEvents() {
-    final currentEvents = List<Map<String, dynamic>>.from(_strategicEvents);
-    for (final event in currentEvents) {
-      if (event['round'] == _currentRound) {
-        event['action']();
-        _strategicEvents.remove(event);
-        
-        _storageService.logGameEvent(
-          turnRound: _currentRound,
-          playerId: currentPlayer.id,
-          playerName: currentPlayer.name,
-          event: 'strategic_event',
-          extra: event['type'],
-        );
-      }
-    }
   }
 
   Future<void> _recordGameEnd() async {
-    await _storageService.saveGameResults({
-      'user_id': _userId,
-      'game_id': _gameId,
-      'game_mode': _gameMode.toString(),
-      'players': _players.map((p) => p.toJson()).toList(),
-      'max_round': _currentRound,
-      'winner_id': currentPlayer.id,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-    });
+    // await _storageService.saveGameResults({
+    //   'user_id': _userId,
+    //   'game_id': _gameId,
+    //   'game_mode': _state.gameMode.toString(),
+    //   'players': _state.players.map((p) => p.toJson()).toList(),
+    //   'max_round': _state.currentRound,
+    //   'winner_id': currentPlayer.id,
+    //   'timestamp': DateTime.now().millisecondsSinceEpoch,
+    // });
   }
 
   @override

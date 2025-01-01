@@ -1,7 +1,8 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../../providers/game_provider.dart';
 import '../../../models/game_state.dart';
 import '../../../config/theme.dart';
 
@@ -12,156 +13,155 @@ class EventButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<GameState>(
       builder: (context, gameState, child) {
-        final screenSize = MediaQuery.of(context).size;
-        final buttonSize = screenSize.height * 0.4 * 0.7;
-        
-        return SizedBox(
-          width: buttonSize,
-          height: buttonSize,
-          child: Stack(
-            children: [
-              // Background circle
-              CustomPaint(
-                size: Size(buttonSize, buttonSize),
-                painter: EventButtonsPainter(
-                  backgroundColor: FlavaTheme.primaryColor,
-                  buttonCount: 4, // Default to 4 buttons
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final buttonSize = min(constraints.maxWidth, constraints.maxHeight);
+            final choicesCount = gameState.currentEvent?.choices.length ?? 0;
+
+            return SizedBox(
+              width: buttonSize,
+              height: buttonSize,
+              child: CustomPaint(
+                child: GestureDetector(
+                  onTapDown: (details) => _handleTap(
+                    context,
+                    details.localPosition,
+                    Size(buttonSize, buttonSize),
+                    choicesCount,
+                  ),
+                  child: CustomPaint(
+                    painter: CircularSectionsPainter(
+                      sections: choicesCount,
+                      choices:
+                          gameState.currentEvent?.choices.displayNames ?? [],
+                    ),
+                  ),
                 ),
               ),
-              
-              // Event choice buttons
-              ...List.generate(4, (index) {
-                final angle = (index * 90 - 45) * 3.14159 / 180;
-                return Positioned(
-                  left: buttonSize / 2 + buttonSize * 0.3 * cos(angle) - 60,
-                  top: buttonSize / 2 + buttonSize * 0.3 * sin(angle) - 30,
-                  child: SizedBox(
-                    width: 120,
-                    height: 60,
-                    child: EventChoiceButton(
-                      index: index,
-                      onPressed: () => _handleEventChoice(context, index),
-                    ),
-                  ),
-                );
-              }),
-              
-              // Center text display
-              if (gameState.currentEvent?.description != null)
-                Transform.rotate(
-                  angle: 3.14159, // 180 degrees
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        gameState.currentEvent!.description, // What if it's null?
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  void _handleEventChoice(BuildContext context, int index) {
-    final gameState = context.read<GameState>();
-    gameState.handleEventChoice(index);
+  void _handleTap(
+      BuildContext context, Offset tapPosition, Size size, int sections) {
+    if (sections == 0) return;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    // Calculate the angle of the tap relative to the center
+    final dx = tapPosition.dx - center.dx;
+    final dy = tapPosition.dy - center.dy;
+    double angle = (atan2(dy, dx) * 180 / pi + 360) % 360;
+
+    // Check if tap is within the circle
+    final distance = sqrt(dx * dx + dy * dy);
+    if (distance > radius) return;
+
+    // Determine which section was tapped based on the angle
+    int section;
+    switch (sections) {
+      case 1:
+        section = 0;
+        break;
+      case 2:
+        section = angle < 180 ? 0 : 1;
+        break;
+      case 3:
+        section = (angle / 120).floor();
+        break;
+      case 4:
+        section = (angle / 90).floor();
+        break;
+      default:
+        return;
+    }
+
+    context.read<GameProvider>().handleEventChoice(section);
   }
 }
 
-class EventChoiceButton extends StatelessWidget {
-  final int index;
-  final VoidCallback onPressed;
+class CircularSectionsPainter extends CustomPainter {
+  final int sections;
+  final List<String> choices;
 
-  const EventChoiceButton({
-    super.key,
-    required this.index,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<GameState>(
-      builder: (context, gameState, child) {
-        final buttonText = gameState.currentEvent?.choices[index];
-        
-        if (buttonText == null) return const SizedBox.shrink();
-
-        return TextButton(
-          onPressed: onPressed,
-          style: TextButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            padding: EdgeInsets.zero,
-          ),
-          child: Text(
-            buttonText,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class EventButtonsPainter extends CustomPainter {
-  final Color backgroundColor;
-  final int buttonCount;
-
-  EventButtonsPainter({
-    required this.backgroundColor,
-    required this.buttonCount,
+  CircularSectionsPainter({
+    required this.sections,
+    required this.choices,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = backgroundColor
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    // Background circle paint
+    final backgroundPaint = Paint()
+      ..color = FlavaTheme.primaryColor
       ..style = PaintingStyle.fill;
 
+    // Section divider paint
+    final dividerPaint = Paint()
+      ..color = Colors.white.withAlpha(100)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
     // Draw main circle
-    canvas.drawCircle(
-      Offset(size.width / 2, size.height / 2),
-      size.width / 2,
-      paint,
+    canvas.drawCircle(center, radius, backgroundPaint);
+
+    // Draw sections
+    if (sections > 1) {
+      final sectionAngle = 360 / sections;
+      for (int i = 0; i < sections; i++) {
+        final startAngle = i * sectionAngle * pi / 180;
+        canvas.save();
+        canvas.translate(center.dx, center.dy);
+        canvas.rotate(startAngle);
+        canvas.drawLine(
+          Offset(0, 0),
+          Offset(radius, 0),
+          dividerPaint,
+        );
+        canvas.restore();
+      }
+    }
+
+    // Draw text
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
     );
 
-    // Draw dividing lines
-    paint.color = Colors.white.withOpacity(0.3);
-    paint.strokeWidth = 2;
-    paint.style = PaintingStyle.stroke;
+    for (int i = 0; i < sections; i++) {
+      if (i >= choices.length) break;
 
-    if (buttonCount >= 2) {
-      canvas.drawLine(
-        Offset(0, size.height / 2),
-        Offset(size.width, size.height / 2),
-        paint,
+      final sectionAngle = 360 / sections;
+      final angle = (i * sectionAngle + sectionAngle / 2) * pi / 180;
+
+      textPainter.text = TextSpan(
+        text: choices[i],
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+        ),
       );
-    }
-    
-    if (buttonCount >= 4) {
-      canvas.drawLine(
-        Offset(size.width / 2, 0),
-        Offset(size.width / 2, size.height),
-        paint,
-      );
+
+      textPainter.layout(maxWidth: radius);
+
+      final textX =
+          center.dx + cos(angle) * radius * 0.6 - textPainter.width / 2;
+      final textY =
+          center.dy + sin(angle) * radius * 0.6 - textPainter.height / 2;
+
+      textPainter.paint(canvas, Offset(textX, textY));
     }
   }
 
   @override
-  bool shouldRepaint(EventButtonsPainter oldDelegate) {
-    return oldDelegate.backgroundColor != backgroundColor ||
-           oldDelegate.buttonCount != buttonCount;
+  bool shouldRepaint(CircularSectionsPainter oldDelegate) {
+    return oldDelegate.sections != sections || oldDelegate.choices != choices;
   }
 }

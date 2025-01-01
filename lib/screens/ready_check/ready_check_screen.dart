@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../providers/game_provider.dart';
 import '../../models/game_state.dart';
 import '../../config/theme.dart';
 import '../../config/routes.dart';
@@ -8,8 +10,8 @@ class ReadyCheckScreen extends StatelessWidget {
   const ReadyCheckScreen({super.key});
 
   void _startGame(BuildContext context) {
-    final gameState = context.read<GameState>();
-    gameState.startGame();
+    final gameProvider = context.read<GameProvider>();
+    gameProvider.startGame();
     Navigator.pushReplacementNamed(context, AppRoutes.game);
   }
 

@@ -15,7 +15,7 @@ class GameTimer extends StatelessWidget {
           size: Size.fromRadius(MediaQuery.of(context).size.height * 0.2),
           painter: TimerPainter(
             progress: gameState.turnProgress,
-            backgroundColor: FlavaTheme.primaryColor.withOpacity(0.3),
+            backgroundColor: FlavaTheme.primaryColor.withAlpha(100),
             progressColor: FlavaTheme.primaryColor,
           ),
         );

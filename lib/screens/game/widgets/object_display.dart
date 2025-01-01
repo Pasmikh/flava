@@ -4,18 +4,20 @@ import 'package:flava/config/theme.dart';
 class ObjectDisplay extends StatefulWidget {
   final String objectName;
   final Color objectColor;
+  final bool forceTextDisplay;
 
-  const ObjectDisplay({
-    super.key,
-    required this.objectName,
-    required this.objectColor,
-  });
+  const ObjectDisplay(
+      {super.key,
+      required this.objectName,
+      required this.objectColor,
+      this.forceTextDisplay = false});
 
   @override
   State<ObjectDisplay> createState() => _ObjectDisplayState();
 }
 
-class _ObjectDisplayState extends State<ObjectDisplay> with SingleTickerProviderStateMixin {
+class _ObjectDisplayState extends State<ObjectDisplay>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -57,7 +59,7 @@ class _ObjectDisplayState extends State<ObjectDisplay> with SingleTickerProvider
     // Extract color and object type from the objectName
     final isRed = widget.objectColor == FlavaTheme.redObjectColor;
     final isGreen = widget.objectColor == FlavaTheme.greenObjectColor;
-    
+
     // Map object names to image paths
     final objectMap = {
       'ШНУРОК': 'shnurok',
@@ -78,12 +80,12 @@ class _ObjectDisplayState extends State<ObjectDisplay> with SingleTickerProvider
       (key) => widget.objectName.toUpperCase().contains(key),
       orElse: () => '',
     );
-    
+
     if (objectKey.isEmpty) return '';
-    
+
     String baseObject = objectMap[objectKey]!;
     String color = isRed ? 'red' : (isGreen ? 'green' : '');
-    
+
     return 'assets/images/${baseObject}_$color.jpg';
   }
 
@@ -100,14 +102,14 @@ class _ObjectDisplayState extends State<ObjectDisplay> with SingleTickerProvider
         height: objectSize,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          image: imagePath.isNotEmpty
+          image: (!widget.forceTextDisplay && imagePath.isNotEmpty)
               ? DecorationImage(
                   image: AssetImage(imagePath),
                   fit: BoxFit.cover,
                 )
               : null,
         ),
-        child: imagePath.isEmpty
+        child: (widget.forceTextDisplay || imagePath.isEmpty)
             ? Center(
                 child: Text(
                   widget.objectName,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/game_state.dart';
+
+import '../../providers/game_provider.dart';
 import '../../models/game_mode.dart';
 import '../../config/theme.dart';
 import '../../config/routes.dart';
@@ -14,6 +15,7 @@ class PlayerSetupScreen extends StatefulWidget {
 
 class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
   final _playerNameController = TextEditingController();
+  final _focusNode = FocusNode();
   final List<String> _playerNames = [];
   static const int maxPlayers = 5;
   static const int minPlayers = 2;
@@ -21,6 +23,7 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
   @override
   void dispose() {
     _playerNameController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -30,6 +33,8 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
       setState(() {
         _playerNames.add(name);
         _playerNameController.clear();
+        // Unfocus before clearing
+        _focusNode.unfocus();
       });
     }
   }
@@ -42,8 +47,8 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
 
   void _startGame(GameMode mode) {
     if (_playerNames.length >= minPlayers) {
-      final gameState = context.read<GameState>();
-      gameState.initializeGame(
+      final gameProvider = context.read<GameProvider>();
+      gameProvider.initializeGame(
         playerNames: _playerNames,
         gameMode: mode,
       );
@@ -70,6 +75,7 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
               // Player name input field
               TextField(
                 controller: _playerNameController,
+                focusNode: _focusNode,
                 decoration: InputDecoration(
                   hintText: 'Player name',
                   suffixIcon: IconButton(
