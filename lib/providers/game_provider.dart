@@ -10,6 +10,8 @@ import '../models/game_event.dart';
 import '../services/game_logic.dart';
 import '../services/event_handler.dart';
 import '../services/logging_service.dart';
+import '../config/theme.dart';
+import '../extensions/player_list_extension.dart';
 
 enum GameStatus {
   initial,
@@ -80,7 +82,7 @@ class GameProvider extends ChangeNotifier {
 
   void setupTestGame() {
     initializeGame(
-      playerNames: ['Andy', 'Bob', 'Celene'],
+      playerNames: ['Andy', 'Bob', 'Celene', 'Dwayne'],
       gameMode: FunGameMode(),
     );
   }
@@ -246,11 +248,16 @@ class GameProvider extends ChangeNotifier {
   }
 
   void _generateNewTurn() {
-    final GameEvent? event = EventManager.rollEvent(_state);
+    // Increase event probabilities
+    _accumulateEventProbabilities();
+
+    // Calculate whether event should be triggered
+    final GameEvent? event = EventManager.createEvent(_state);
 
     if (event != null) {
       _handleEvent(event);
     } else {
+      // Generate a new object if no event is triggered
       _generateRandomObject();
     }
   }
@@ -268,6 +275,11 @@ class GameProvider extends ChangeNotifier {
       },
     );
 
+    if (event.resetsEventChance) {
+      // Reset the probability for this event type
+      state.currentPlayer.storedEventProbabilities[event.type] = 0.0;
+    }
+
     // Pause the game timer when event triggers in fun mode
     _gameTimer?.cancel();
 
@@ -279,8 +291,9 @@ class GameProvider extends ChangeNotifier {
       turnTimeLeft: _state.turnTimeLeft + event.additionalTime,
     ));
 
-    // If the event doesn't require confirmation, execute it immediately
-    if (!event.requiresConfirmation) {
+    // If the event doesn't require confirmation, execute it immediately (but not in beginner mode)
+    if ((!event.requiresConfirmation) &&
+        (_state.gameMode is! BeginnerGameMode)) {
       final newState = event.execute(_state, 0);
       _state = newState.copyWith(GameStateUpdate(
         status: GameStatus.playing,
@@ -328,6 +341,14 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
+  void _accumulateEventProbabilities() {
+    // Add base probabilities every turn
+    _state.currentPlayer.storedEventProbabilities.forEach((type, prob) {
+      final base = _state.gameMode.getBaseEventProbability(type);
+      _state.currentPlayer.storedEventProbabilities[type] = prob + base;
+    });
+  }
+
   void _generateRandomObject() {
     final (object, color) = GameLogic.generateRandomObject(
       keyProbability: _state.gameMode.calculateKeyProbability(
@@ -342,15 +363,26 @@ class GameProvider extends ChangeNotifier {
       'generate_object',
       data: {
         'object': object,
+        'color': color,
         'player': currentPlayer.name,
         'round': _state.currentRound,
       },
     );
 
-    _state = _state.copyWith(GameStateUpdate(
+    // Add object to list of player objects
+    String colorString = color == FlavaTheme.greenObjectColor ? 'green' : 'red';
+
+    currentPlayer.addObject(object, colorString);
+    _state.players.updatePlayer(currentPlayer);
+
+    // Fix: Assign the state update properly
+    _state = _state.copyWith(GameStateUpdate(  // Add assignment operator here
       currentObject: object,
       currentObjectColor: color,
+      players: _state.players,
     ));
+
+    notifyListeners();
   }
 
   bool _checkWinCondition() {

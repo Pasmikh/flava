@@ -1,98 +1,75 @@
 import 'dart:math' as math;
 
-import '../models/events/get_events.dart';
+import '../config/constants.dart';
+import '../models/events/take_events.dart';
 import '../models/events/drop_events.dart';
+import '../models/events/other_events.dart';
 import '../models/game_state.dart';
 import '../models/game_event.dart';
 
 class EventManager {
-  static Map<EventType, double> calculateEventProbabilities(GameState state) {
-    final base = {
-      EventType.get: state.gameMode.getEventProbability,
-      EventType.drop: state.gameMode.dropEventProbability,
-      EventType.other: state.gameMode.otherEventProbability,
-      EventType.midgame: state.gameMode.midgameEventProbability,
-      EventType.strategic: state.gameMode.strategicEventProbability,
-    };
-
-    // Adjust probabilities based on event frequency
-    final totalEvents = state.currentPlayer.eventCounts.values
-        .fold(0, (sum, count) => sum + count);
-    final adjustments = state.currentPlayer.eventCounts.map((type, count) {
-      final ratio = totalEvents > 0 ? count / totalEvents : 0.0;
-      return MapEntry(type, math.max(0.0, 0.005 * (0.2 - ratio)));
-    });
-
-    // Apply round restrictions
-    final adjusted = Map<EventType, double>.from(base);
-    adjusted.forEach((type, probability) {
-      if ((type == EventType.drop && state.currentRound < 3) ||
-          (type == EventType.other && state.currentRound < 5) ||
-          ((type == EventType.midgame || type == EventType.strategic) &&
-              state.currentRound < 6)) {
-        adjusted[type] = 0.0;
-      } else {
-        adjusted[type] = probability + (adjustments[type] ?? 0.0);
-      }
-    });
-
-    return adjusted;
-  }
-
-  static EventType? rollEventType(GameState state) {
-    // Calculate event probabilities based on game mode and player state
-    final Map<EventType, double> eventProbabilities =
-        calculateEventProbabilities(state);
-
-    // Check each event type in priority order
-    for (var type in EventType.values) {
-      if (_shouldTriggerEventType(
-          type, state.currentRound, eventProbabilities)) {
-        state.currentPlayer.eventCounts[type] =
-            (state.currentPlayer.eventCounts[type] ?? 0) + 1;
-        return type;
-      }
-    }
-    return null;
-  }
-
-  static GameEvent? rollEvent(GameState state) {
+  static GameEvent? createEvent(GameState state) {
     // For testing purposes, we can force an event type
     if (state.currentRound == 3) {
-      // return createGetThreeEvent(state);
-      return createGetKeyObjectEvent(state);
+      return createGiveOneLeftEvent(state);
+      // return createGetKeyObjectEvent(state);
+    } else if (state.currentRound == 4) {
+      return createDropObjectEvent(state);
     }
-    // else if (state.currentRound == 4) {
-    //   return createGetKeyObjectEvent(state);
-    // }
 
     // First determine if we should trigger an event
     final EventType? eventType = rollEventType(state);
     if (eventType == null) return null;
 
     // Create the event based on the rolled type
-    return createEvent(eventType, state);
+    return rollEvent(eventType, state);
   }
 
-  static GameEvent createEvent(EventType type, GameState state) {
-    final List<GameEvent Function(GameState)> availableEvents =
+  static EventType? rollEventType(GameState state) {
+    // Calculate event probabilities based on game mode and player state
+    final Map<EventType, double> probabilities =
+        state.currentPlayer.storedEventProbabilities;
+
+    // Check each event type in priority order
+    for (var type in EventType.values) {
+      if (_isEventTypeAllowedInRound(type, state.currentRound) &&
+          _shouldTriggerEventType(type, state.currentRound, probabilities)) {
+        return type;
+      }
+    }
+    return null;
+  }
+
+  static GameEvent rollEvent(EventType type, GameState state) {
+    final List<GameEvent Function(GameState)> typeEvents =
         _getEventsForType(type);
 
-    if (availableEvents.isEmpty) {
+    if (typeEvents.isEmpty) {
       throw StateError('No events available for type $type');
     }
 
+    // Filter based on midgame flag
+    final availableEvents = typeEvents
+        .map((creator) => creator(state))
+        .where((event) =>
+            !event.isMidgame ||
+            state.currentRound >= AppConstants.midgameEventStartRound)
+        .toList();
+
     final eventIndex = math.Random().nextInt(availableEvents.length);
-    return availableEvents[eventIndex](state);
+    return availableEvents[eventIndex];
   }
 
   static List<GameEvent Function(GameState)> _getEventsForType(EventType type) {
     switch (type) {
-      case EventType.get:
-        return getEvents;
+      case EventType.take:
+        return takeEvents;
       case EventType.drop:
         return dropEvents;
-      // Add other event type lists here
+      case EventType.other:
+        return otherEvents;
+      // case EventType.strategic:
+      //   return strategic;
       default:
         return [];
     }
@@ -109,16 +86,14 @@ class EventManager {
 
   static bool _isEventTypeAllowedInRound(EventType type, int currentRound) {
     switch (type) {
-      case EventType.get:
+      case EventType.take:
         return true;
       case EventType.drop:
-        return currentRound >= 3;
+        return currentRound >= AppConstants.dropEventStartRound;
       case EventType.other:
-        return currentRound >= 5;
-      case EventType.midgame:
-        return currentRound >= 6;
+        return currentRound >= AppConstants.otherEventStartRound;
       case EventType.strategic:
-        return currentRound >= 6;
+        return currentRound >= AppConstants.strategicEventStartRound;
       default:
         return false;
     }

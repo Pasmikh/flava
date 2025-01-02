@@ -113,7 +113,29 @@ class CircularSectionsPainter extends CustomPainter {
     canvas.drawCircle(center, radius, backgroundPaint);
 
     // Draw sections
-    if (sections > 1) {
+    if (sections == 1) {
+      final textPainter = TextPainter(
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+      );
+
+      textPainter.text = TextSpan(
+        text: choices[0],
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+
+      textPainter.layout(maxWidth: radius * 1.5);
+
+      final textX = center.dx - textPainter.width / 2;
+      final textY = center.dy - textPainter.height / 2;
+
+      textPainter.paint(canvas, Offset(textX, textY));
+      return;
+    } else if (sections > 1) {
       final sectionAngle = 360 / sections;
       for (int i = 0; i < sections; i++) {
         final startAngle = i * sectionAngle * pi / 180;

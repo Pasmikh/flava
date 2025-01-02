@@ -95,6 +95,22 @@ class _ObjectDisplayState extends State<ObjectDisplay>
     final objectSize = screenSize.height * 0.4;
     final imagePath = _getImagePath();
 
+    // Skip rendering text if it's "Confirm"
+    if (widget.objectName == "Confirm") {
+      return ScaleTransition(
+        scale: _scaleAnimation,
+        child: Container(
+          width: objectSize,
+          height: objectSize,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: FlavaTheme
+                .primaryColor, // or any color you want for confirmation button
+          ),
+        ),
+      );
+    }
+
     return ScaleTransition(
       scale: _scaleAnimation,
       child: Container(

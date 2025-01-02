@@ -1,6 +1,8 @@
 import 'dart:math' as math;
+
 import '../config/constants.dart';
 import '../config/game_mode_rules.dart';
+import './game_event.dart';
 
 abstract class GameMode {
   // Basic properties
@@ -12,10 +14,9 @@ abstract class GameMode {
   final double endTurnLength;
 
   // Event probabilities
-  final double getEventProbability;
+  final double takeEventProbability;
   final double dropEventProbability;
   final double otherEventProbability;
-  final double midgameEventProbability;
   final double strategicEventProbability;
 
   // Key object configuration
@@ -34,10 +35,9 @@ abstract class GameMode {
     required this.description,
     required this.startTurnLength,
     required this.endTurnLength,
-    required this.getEventProbability,
+    required this.takeEventProbability,
     required this.dropEventProbability,
     required this.otherEventProbability,
-    required this.midgameEventProbability,
     required this.strategicEventProbability,
     required this.keyObjectProbability,
     required this.requiredKeyObjectsToWin,
@@ -74,6 +74,21 @@ abstract class GameMode {
         (math.max(keyProbabilityGrowthRounds, currentRound) /
             keyProbabilityGrowthRounds);
   }
+
+  double getBaseEventProbability(EventType type) {
+    switch (type) {
+      case EventType.take:
+        return takeEventProbability;
+      case EventType.drop:
+        return dropEventProbability;
+      case EventType.other:
+        return otherEventProbability;
+      case EventType.strategic:
+        return strategicEventProbability;
+      default:
+        return 0.0;
+    }
+  }
 }
 
 /// Beginner mode
@@ -85,14 +100,12 @@ class BeginnerGameMode extends GameMode {
           startTurnLength:
               gameModeRules[GameModeType.beginner]!['startTurnLength'],
           endTurnLength: gameModeRules[GameModeType.beginner]!['endTurnLength'],
-          getEventProbability:
-              gameModeRules[GameModeType.beginner]!['getEventProbability'],
+          takeEventProbability:
+              gameModeRules[GameModeType.beginner]!['takeEventProbability'],
           dropEventProbability:
               gameModeRules[GameModeType.beginner]!['dropEventProbability'],
           otherEventProbability:
               gameModeRules[GameModeType.beginner]!['otherEventProbability'],
-          midgameEventProbability:
-              gameModeRules[GameModeType.beginner]!['midgameEventProbability'],
           strategicEventProbability: gameModeRules[GameModeType.beginner]![
               'strategicEventProbability'],
           keyObjectProbability:
@@ -120,14 +133,12 @@ class FunGameMode extends GameMode {
           description: gameModeRules[GameModeType.fun]!['description'],
           startTurnLength: gameModeRules[GameModeType.fun]!['startTurnLength'],
           endTurnLength: gameModeRules[GameModeType.fun]!['endTurnLength'],
-          getEventProbability:
-              gameModeRules[GameModeType.fun]!['getEventProbability'],
+          takeEventProbability:
+              gameModeRules[GameModeType.fun]!['takeEventProbability'],
           dropEventProbability:
               gameModeRules[GameModeType.fun]!['dropEventProbability'],
           otherEventProbability:
               gameModeRules[GameModeType.fun]!['otherEventProbability'],
-          midgameEventProbability:
-              gameModeRules[GameModeType.fun]!['midgameEventProbability'],
           strategicEventProbability:
               gameModeRules[GameModeType.fun]!['strategicEventProbability'],
           keyObjectProbability:
@@ -156,14 +167,12 @@ class MasterGameMode extends GameMode {
           startTurnLength:
               gameModeRules[GameModeType.master]!['startTurnLength'],
           endTurnLength: gameModeRules[GameModeType.master]!['endTurnLength'],
-          getEventProbability:
-              gameModeRules[GameModeType.master]!['getEventProbability'],
+          takeEventProbability:
+              gameModeRules[GameModeType.master]!['takeEventProbability'],
           dropEventProbability:
               gameModeRules[GameModeType.master]!['dropEventProbability'],
           otherEventProbability:
               gameModeRules[GameModeType.master]!['otherEventProbability'],
-          midgameEventProbability:
-              gameModeRules[GameModeType.master]!['midgameEventProbability'],
           strategicEventProbability:
               gameModeRules[GameModeType.master]!['strategicEventProbability'],
           keyObjectProbability:

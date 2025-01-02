@@ -1,10 +1,9 @@
 import 'package:flava/models/game_state.dart';
 
 enum EventType {
-  get,
+  take,
   drop,
   other,
-  midgame,
   strategic,
   win,
 }
@@ -16,6 +15,8 @@ class GameEvent {
   final EventType type;
   final double additionalTime;
   final bool requiresConfirmation;
+  final bool resetsEventChance;
+  final bool isMidgame;
   final EventChoices choices;
   final GameState Function(GameState, int?) executeEvent;
 
@@ -26,6 +27,8 @@ class GameEvent {
     required this.choices,
     this.additionalTime = 0,
     this.requiresConfirmation = false,
+    this.resetsEventChance = true,
+    this.isMidgame = false,
   });
 
   // Returns new state after executing the event

@@ -15,11 +15,18 @@ class Player {
 
   // Event counts
   Map<EventType, int> eventCounts = {
-    EventType.get: 0,
+    EventType.take: 0,
     EventType.drop: 0,
     EventType.other: 0,
-    EventType.midgame: 0,
     EventType.strategic: 0,
+  };
+
+  // Event probs
+  final Map<EventType, double> storedEventProbabilities = {
+    EventType.take: 0.0,
+    EventType.drop: 0.0,
+    EventType.other: 0.0,
+    EventType.strategic: 0.0,
   };
 
   // Strategic events
@@ -96,10 +103,9 @@ class Player {
       'greenObjects': greenObjects,
       'redObjects': redObjects,
       'keyObjectCount': keyObjectCount,
-      'getEvents': eventCounts[EventType.get],
+      'getEvents': eventCounts[EventType.take],
       'dropEvents': eventCounts[EventType.drop],
       'otherEvents': eventCounts[EventType.other],
-      'midgameEvents': eventCounts[EventType.midgame],
       'strategicEvents': eventCounts[EventType.strategic],
     };
   }
@@ -113,10 +119,9 @@ class Player {
     player.redObjects = Map<String, int>.from(json['redObjects']);
     player.keyObjectCount = json['keyObjectCount'];
     player.eventCounts = {
-      EventType.get: json['getEvents'],
+      EventType.take: json['getEvents'],
       EventType.drop: json['dropEvents'],
       EventType.other: json['otherEvents'],
-      EventType.midgame: json['midgameEvents'],
       EventType.strategic: json['strategicEvents'],
     };
 

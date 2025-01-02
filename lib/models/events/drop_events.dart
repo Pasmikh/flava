@@ -1,15 +1,18 @@
-import 'package:flava/extensions/player_list_extension.dart';
-import 'package:flava/models/game_state.dart';
+import 'dart:math' as math;
+
+import '../../extensions/player_list_extension.dart';
+import '../game_state.dart';
 import '../game_event.dart';
+import '../../config/constants.dart';
 
 final List<GameEvent Function(GameState)> dropEvents = [
-  createDrop3Event,
+  createDropThreeEvent,
   createDropObjectEvent,
-  createAllDrop1Event,
+  createAllDropOneEvent,
   createDropKeyObjectEvent,
 ];
 
-GameEvent createDrop3Event(GameState state) {
+GameEvent createDropThreeEvent(GameState state) {
   final choices = EventChoices(
     state.players
         .where((p) => p.id != state.currentPlayer.id && !p.isEliminated)
@@ -29,26 +32,19 @@ GameEvent createDrop3Event(GameState state) {
       final targetPlayer = choices.items[choiceIndex];
       final updatedPlayer = targetPlayer.copyWith();
 
-      // Drop one green object if available
+      // Drop one of each type if available
       if (updatedPlayer.greenObjects.values.any((count) => count > 0)) {
         updatedPlayer.removeObject('random', 'green');
       }
-
-      // Drop one red object if available
       if (updatedPlayer.redObjects.values.any((count) => count > 0)) {
         updatedPlayer.removeObject('random', 'red');
       }
-
-      // Drop key object if available
       if (updatedPlayer.keyObjectCount > 0) {
-        updatedPlayer.keyObjectCount--;
+        updatedPlayer.removeKeyObject();
       }
 
       final updatedPlayers = currentState.players.updatePlayer(updatedPlayer);
-
-      return currentState.copyWith(GameStateUpdate(
-        players: updatedPlayers,
-      ));
+      return currentState.copyWith(GameStateUpdate(players: updatedPlayers));
     },
   );
 }
@@ -66,6 +62,18 @@ GameEvent createDropObjectEvent(GameState state) {
     });
   }
 
+  // Remove key object and random if present
+  availableObjects.remove(AppConstants.keyObject);
+  availableObjects.remove('random');
+
+  // If less than 4 choices, add random objects
+  while (availableObjects.length < 4) {
+    // Take random object from the list of all objects
+    final randomObject = AppConstants
+        .baseObjects[math.Random().nextInt(AppConstants.baseObjects.length)];
+    availableObjects.add(randomObject);
+  }
+
   return GameEvent(
     description: 'Choose an object. All players will drop all such objects',
     type: EventType.drop,
@@ -75,37 +83,32 @@ GameEvent createDropObjectEvent(GameState state) {
       if (choiceIndex == null) return currentState;
 
       final selectedObject = availableObjects.toList()[choiceIndex];
-
       final updatedPlayers = currentState.players.updateAllPlayers((player) {
-        // Create copy with existing objects
-        var updatedPlayer = player.copyWith(
-          greenObjects: Map.from(player.greenObjects),
-          redObjects: Map.from(player.redObjects),
-        );
+        var updatedPlayer = player.copyWith();
 
         // Drop all instances of the selected object
-        while ((updatedPlayer.greenObjects[selectedObject] ?? 0) > 0) {
+        while (updatedPlayer.greenObjects[selectedObject] != null &&
+            updatedPlayer.greenObjects[selectedObject]! > 0) {
           updatedPlayer.removeObject(selectedObject, 'green');
         }
-        while ((updatedPlayer.redObjects[selectedObject] ?? 0) > 0) {
+        while (updatedPlayer.redObjects[selectedObject] != null &&
+            updatedPlayer.redObjects[selectedObject]! > 0) {
           updatedPlayer.removeObject(selectedObject, 'red');
         }
 
         return updatedPlayer;
       });
 
-      return currentState.copyWith(GameStateUpdate(
-        players: updatedPlayers,
-      ));
+      return currentState.copyWith(GameStateUpdate(players: updatedPlayers));
     },
   );
 }
 
-GameEvent createAllDrop1Event(GameState state) {
+GameEvent createAllDropOneEvent(GameState state) {
   return GameEvent(
     description: 'ALL players drop any object',
     type: EventType.drop,
-    choices: EventChoices(['OK'], (str) => str),
+    choices: EventChoices(['Confirm'], (str) => str),
     executeEvent: (currentState, _) {
       final updatedPlayers = currentState.players.updateAllPlayers((player) {
         // Create copy with existing objects
@@ -144,6 +147,20 @@ GameEvent createDropKeyObjectEvent(GameState state) {
     });
   }
 
+  // Remove key object and random if present
+  availableObjects.remove(AppConstants.keyObject);
+  availableObjects.remove('random');
+
+  // If less than 4 choices, add random objects
+  if (availableObjects.length < 4) {
+    for (var i = availableObjects.length; i < 4; i++) {
+      // Take random object from the list of all objects
+      final randomObject = AppConstants
+          .baseObjects[math.Random().nextInt(AppConstants.baseObjects.length)];
+      availableObjects.add(randomObject);
+    }
+  }
+
   return GameEvent(
     description:
         'Choose an object. All players holding that object will drop a key object',
@@ -151,30 +168,8 @@ GameEvent createDropKeyObjectEvent(GameState state) {
     requiresConfirmation: true,
     choices: EventChoices(availableObjects.toList(), (object) => object),
     executeEvent: (currentState, choiceIndex) {
+      // Skip tracking logic for now
       return currentState;
-      // if (choiceIndex == null) return currentState;
-
-      // final selectedObject = availableObjects.toList()[choiceIndex];
-
-      // final updatedPlayers = currentState.players.updateAllPlayers((player) {
-      //   // Create copy with existing objects and key count
-      //   var updatedPlayer = player.copyWith(
-      //     greenObjects: Map.from(player.greenObjects),
-      //     redObjects: Map.from(player.redObjects),
-      //     keyObjectCount: player.keyObjectCount,
-      //   );
-
-      //   // If player has the selected object and a key object, drop the key object
-      //   if (((updatedPlayer.greenObjects[selectedObject] ?? 0) > 0 ||
-      //           (updatedPlayer.redObjects[selectedObject] ?? 0) > 0) &&
-      //       updatedPlayer.keyObjectCount > 0) {
-      //     updatedPlayer.removeKeyObject();
-      //   }
-
-      //   return updatedPlayer;
-      // });
-
-      // return currentState.copyWith(players: updatedPlayers);
     },
   );
 }

@@ -83,36 +83,38 @@ class AppConstants {
   static const double fastHeartbeatThreshold = 2.0;
   static const double normalHeartbeatThreshold = 4.0;
 
+  // Event parameters
+  static const int dropEventStartRound = 3;
+  static const int otherEventStartRound = 5;
+  static const int midgameEventStartRound = 6;
+  static const int strategicEventStartRound = 6;
+
   // Event probabilities
   static const Map<String, double> defaultEventProbabilities = {
-    'get': 0.012,
+    'take': 0.012,
     'drop': 0.01,
     'other': 0.015,
-    'midgame': 0.007,
     'strategic': 0.007,
   };
 
   static const Map<String, double> beginnerEventProbabilities = {
-    'get': 0.02,
+    'take': 0.02,
     'drop': 0.02,
     'other': 0.01,
-    'midgame': 0.0,
     'strategic': 0.0,
   };
 
   static const Map<String, double> funEventProbabilities = {
-    'get': 0.012,
+    'take': 0.012,
     'drop': 0.01,
     'other': 0.015,
-    'midgame': 0.007,
-    'strategic': 0.0,
+    'strategic': 0.01,
   };
 
   static const Map<String, double> masterEventProbabilities = {
-    'get': 0.01,
+    'take': 0.01,
     'drop': 0.01,
     'other': 0.01,
-    'midgame': 0.01,
     'strategic': 0.01,
   };
 
