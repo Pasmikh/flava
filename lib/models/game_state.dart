@@ -2,7 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flava/models/game_mode.dart';
 import 'package:flava/models/player.dart';
 import 'package:flava/models/game_event.dart';
-import 'package:flava/providers/game_provider.dart';
+
+enum GameStatus {
+  initial,
+  ready,
+  playing,
+  paused,
+  eventChoice,
+  winTestConfirmation,
+  winTest,
+  gameOver,
+}
 
 class GameState {
   // Core game state (data only)
@@ -51,29 +61,28 @@ class GameState {
   // Create a new state with updated values
   GameState copyWith(GameStateUpdate update) {
     return GameState(
-      gameMode: update.gameMode ?? gameMode,
-      players: update.players ?? players,
-      currentPlayerIndex: update.currentPlayerIndex ?? currentPlayerIndex,
-      currentRound: update.currentRound ?? currentRound,
-      status: update.status ?? status,
-      turnRotationClockwise:
-          update.turnRotationClockwise ?? turnRotationClockwise,
-      turnTimeLeft: update.turnTimeLeft ?? turnTimeLeft,
-      additionalTime: update.additionalTime ?? additionalTime,
-      currentObject: update.clearCurrentObject
-          ? null
-          : (update.currentObject ?? currentObject),
-      currentObjectColor: update.clearCurrentObjectColor
-          ? null
-          : (update.currentObjectColor ?? currentObjectColor),
-      currentEvent: update.clearCurrentEvent
-          ? null
-          : (update.currentEvent ?? currentEvent),
-      choices: update.choices ?? choices,
-      currentChoice: update.clearCurrentChoice
-          ? null
-          : (update.currentChoice ?? currentChoice),
-    );
+        gameMode: update.gameMode ?? gameMode,
+        players: update.players ?? players,
+        currentPlayerIndex: update.currentPlayerIndex ?? currentPlayerIndex,
+        currentRound: update.currentRound ?? currentRound,
+        status: update.status ?? status,
+        turnRotationClockwise:
+            update.turnRotationClockwise ?? turnRotationClockwise,
+        turnTimeLeft: update.turnTimeLeft ?? turnTimeLeft,
+        additionalTime: update.additionalTime ?? additionalTime,
+        currentObject: update.clearCurrentObject
+            ? null
+            : (update.currentObject ?? currentObject),
+        currentObjectColor: update.clearCurrentObjectColor
+            ? null
+            : (update.currentObjectColor ?? currentObjectColor),
+        currentEvent: update.clearCurrentEvent
+            ? null
+            : (update.currentEvent ?? currentEvent),
+        choices: update.choices ?? choices,
+        currentChoice: update.clearCurrentChoice
+            ? null
+            : (update.currentChoice ?? currentChoice));
   }
 }
 

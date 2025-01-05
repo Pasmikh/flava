@@ -13,15 +13,6 @@ import '../services/logging_service.dart';
 import '../config/theme.dart';
 import '../extensions/player_list_extension.dart';
 
-enum GameStatus {
-  initial,
-  ready,
-  playing,
-  paused,
-  eventChoice,
-  gameOver,
-}
-
 class GameProvider extends ChangeNotifier {
   late GameState _state;
 
@@ -133,7 +124,8 @@ class GameProvider extends ChangeNotifier {
   }
 
   void _handleTimerTick(Timer timer) async {
-    if (_state.status == GameStatus.eventChoice) {
+    if (_state.status == GameStatus.eventChoice ||
+        _state.status == GameStatus.winTestConfirmation) {
       return;
     }
 
@@ -154,6 +146,13 @@ class GameProvider extends ChangeNotifier {
   }
 
   Future<void> _handleTurnEnd() async {
+    // Handle win test results if active.
+    if (state.status == GameStatus.winTest) {
+      _gameTimer?.cancel();
+      _showWinTestButtons();
+      return;
+    }
+
     _loggingService.log(
       'turn_end',
       data: {
@@ -180,7 +179,7 @@ class GameProvider extends ChangeNotifier {
       ));
     }
 
-    if (_checkWinCondition()) {
+    if (_checkGameFinish()) {
       await _endGame();
       return;
     }
@@ -286,9 +285,13 @@ class GameProvider extends ChangeNotifier {
     _state = _state.copyWith(GameStateUpdate(
       currentEvent: event,
       choices: event.getChoices(),
-      status: GameStatus.eventChoice,
-      additionalTime: _state.additionalTime + event.additionalTime,
+      status: event.type == EventType.win
+          ? GameStatus.winTestConfirmation
+          : GameStatus.eventChoice,
+      additionalTime: event.additionalTime,
       turnTimeLeft: _state.turnTimeLeft + event.additionalTime,
+      clearCurrentObject: true,
+      clearCurrentObjectColor: true,
     ));
 
     // If the event doesn't require confirmation, execute it immediately (but not in beginner mode)
@@ -307,6 +310,21 @@ class GameProvider extends ChangeNotifier {
   }
 
   void handleEventChoice(int choice) {
+    // Handle win test if active
+    if (_state.status == GameStatus.winTestConfirmation) {
+      _state = _state.copyWith(GameStateUpdate(
+        status: GameStatus.winTest,
+        currentChoice: _state.choices[choice],
+        choices: [],
+      ));
+      _startTimer();
+      notifyListeners();
+      return;
+    } else if (_state.status == GameStatus.winTest) {
+      _handleWinEventChoice(choice);
+      return;
+    }
+
     if (_state.status == GameStatus.eventChoice &&
         _state.currentEvent != null) {
       final event = _state.currentEvent!;
@@ -376,7 +394,8 @@ class GameProvider extends ChangeNotifier {
     _state.players.updatePlayer(currentPlayer);
 
     // Fix: Assign the state update properly
-    _state = _state.copyWith(GameStateUpdate(  // Add assignment operator here
+    _state = _state.copyWith(GameStateUpdate(
+      // Add assignment operator here
       currentObject: object,
       currentObjectColor: color,
       players: _state.players,
@@ -385,20 +404,75 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _checkWinCondition() {
-    return currentPlayer.keyObjectCount >=
-        _state.gameMode.requiredKeyObjectsToWin;
+  void startWinTest() {
+    GameEvent winEvent = EventManager.createWinEvent(_state);
+    _handleEvent(winEvent);
+  }
+
+  void _showWinTestButtons() {
+    // After win test, show success and failure buttons
+    _state = _state.copyWith(GameStateUpdate(
+      choices: ['Success', 'Failure'],
+      clearCurrentObject: true,
+      clearCurrentObjectColor: true,
+    ));
+
+    notifyListeners();
+  }
+
+  void _handleWinEventChoice(int choice) {
+    if (choice == 0) {
+      _handleWinSuccess();
+    } else {
+      _handleWinFailure();
+    }
+
+    _loggingService.log(
+      'win_test_choice',
+      data: {
+        'player': currentPlayer.name,
+        'round': _state.currentRound,
+        'choice': choice,
+      },
+    );
+
+    _state = _state.copyWith(GameStateUpdate(
+      status: GameStatus.playing,
+      currentChoice: _state.choices[choice],
+      choices: [],
+    ));
+
+    _handleTurnEnd();
+  }
+
+  void _handleWinSuccess() {
+    // If first to win, player is winner
+    currentPlayer.isWinner = _state.players.every((player) => !player.isWinner);
+    // After win, player is eliminated
+    currentPlayer.isEliminated = true;
+    _state.players.updatePlayer(currentPlayer);
+  }
+
+  void _handleWinFailure() {
+    // If not first to win, player is eliminated
+    currentPlayer.removeKeyObject();
+    _state.players.updatePlayer(currentPlayer);
+  }
+
+  bool _checkGameFinish() {
+    // If only one player not eliminated, game is finished
+    return _state.players.where((p) => !p.isEliminated).length == 1;
   }
 
   Future<void> _endGame() async {
     _gameTimer?.cancel();
 
-    final updatedPlayers = List<Player>.from(_state.players);
-    updatedPlayers[_state.currentPlayerIndex].isWinner = true;
+    final String winnerPlayerName =
+        _state.players.firstWhere((p) => p.isWinner).name;
 
     _state = _state.copyWith(GameStateUpdate(
       status: GameStatus.gameOver,
-      players: updatedPlayers,
+      // players: updatedPlayers,
       clearCurrentEvent: true,
       clearCurrentObject: true,
       clearCurrentObjectColor: true,

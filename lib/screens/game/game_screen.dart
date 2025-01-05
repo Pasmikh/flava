@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:math' as math;
 
 import '../../models/game_state.dart';
@@ -43,6 +44,10 @@ class GameScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _handleWinTest(BuildContext context) {
+    context.read<GameProvider>().startWinTest();
   }
 
   @override
@@ -117,7 +122,10 @@ class GameScreen extends StatelessWidget {
                 width: objectSize * 2,
                 height: objectSize * 2,
                 child: (gameState.currentEvent != null) &&
-                        (gameState.status == GameStatus.eventChoice)
+                        (gameState.status == GameStatus.eventChoice ||
+                            gameState.status ==
+                                GameStatus.winTestConfirmation ||
+                            gameState.status == GameStatus.winTest)
                     ? EventButtons()
                     : ObjectDisplay(
                         objectName: gameState.currentChoice ??
@@ -163,8 +171,8 @@ class GameScreen extends StatelessWidget {
         'icon': Icon(
           gameState.status == GameStatus.playing ||
                   gameState.status == GameStatus.eventChoice
-              ? Icons.pause
-              : Icons.play_arrow,
+              ? FontAwesomeIcons.pause
+              : FontAwesomeIcons.play,
           color: FlavaTheme.primaryColor,
         ),
         'onPressed': () => _handlePause(context),
@@ -173,22 +181,24 @@ class GameScreen extends StatelessWidget {
       {
         'x': centerX - (radius * math.cos(math.pi / 4)),
         'y': centerY - (radius * math.sin(math.pi / 4)),
-        'icon': Icon(Icons.skip_next, color: FlavaTheme.primaryColor),
+        'icon': Icon(FontAwesomeIcons.forward, color: FlavaTheme.primaryColor),
         'onPressed': () => _handleEndTurn(context),
       },
       // Bottom-right (Exit)
       {
         'x': centerX + (radius * math.cos(math.pi / 4)),
         'y': centerY + (radius * math.sin(math.pi / 4)),
-        'icon': Icon(Icons.exit_to_app, color: FlavaTheme.primaryColor),
+        'icon': Icon(FontAwesomeIcons.rightFromBracket,
+            color: FlavaTheme.primaryColor),
         'onPressed': () => _handleExit(context),
       },
-      // Bottom-left (Settings)
+      // Bottom-left (Finish)
       {
         'x': centerX - (radius * math.cos(math.pi / 4)),
         'y': centerY + (radius * math.sin(math.pi / 4)),
-        'icon': Icon(Icons.settings, color: FlavaTheme.primaryColor),
-        'onPressed': () {}, // No action for now
+        'icon': Icon(FontAwesomeIcons.flagCheckered,
+            color: FlavaTheme.primaryColor),
+        'onPressed': () => _handleWinTest(context), // No action for now
       },
     ];
 

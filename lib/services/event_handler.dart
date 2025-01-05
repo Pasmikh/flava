@@ -4,6 +4,7 @@ import '../config/constants.dart';
 import '../models/events/take_events.dart';
 import '../models/events/drop_events.dart';
 import '../models/events/other_events.dart';
+import '../models/events/win_events.dart';
 import '../models/game_state.dart';
 import '../models/game_event.dart';
 
@@ -49,7 +50,7 @@ class EventManager {
     }
 
     // Filter based on midgame flag
-    final availableEvents = typeEvents
+    final List<GameEvent> availableEvents = typeEvents
         .map((creator) => creator(state))
         .where((event) =>
             !event.isMidgame ||
@@ -58,6 +59,30 @@ class EventManager {
 
     final eventIndex = math.Random().nextInt(availableEvents.length);
     return availableEvents[eventIndex];
+  }
+
+  static GameEvent createWinEvent(GameState state) {
+    final List<GameEvent Function(GameState)> typeEvents = winEvents;
+
+    if (typeEvents.isEmpty) {
+      throw StateError('No events available for type win');
+    }
+
+    // createWinDropKeysEvent if round >= 16
+    // createWinSwitchHandsEvent if round >= 10
+    // Limit events to those that are allowed in the current round
+    final List<GameEvent Function(GameState)> availableEvents = [
+      createWinGiveTwoEvent
+    ];
+    if (state.currentRound >= AppConstants.winDropKeysEventStartRound) {
+      availableEvents.add(createWinDropKeysEvent);
+    }
+    if (state.currentRound >= AppConstants.winSwitchHandsEventStartRound) {
+      availableEvents.add(createWinSwitchHandsEvent);
+    }
+
+    final eventIndex = math.Random().nextInt(availableEvents.length);
+    return availableEvents[eventIndex](state);
   }
 
   static List<GameEvent Function(GameState)> _getEventsForType(EventType type) {

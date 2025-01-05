@@ -89,6 +89,10 @@ class AppConstants {
   static const int midgameEventStartRound = 6;
   static const int strategicEventStartRound = 6;
 
+  // Win event starting rounds
+  static const int winDropKeysEventStartRound = 16;
+  static const int winSwitchHandsEventStartRound = 10;
+
   // Event probabilities
   static const Map<String, double> defaultEventProbabilities = {
     'take': 0.012,
