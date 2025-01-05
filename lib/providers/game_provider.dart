@@ -144,6 +144,7 @@ class GameProvider extends ChangeNotifier {
       _state = _state.copyWith(GameStateUpdate(
         turnTimeLeft: newTimeLeft,
       ));
+      // _loggingService.log('Heartbeat method trigger', data:{});
       await _playHeartbeatSounds();
       notifyListeners();
     }
@@ -235,6 +236,8 @@ class GameProvider extends ChangeNotifier {
       _state.players.length,
       _state.currentRound,
     );
+
+    // _audioService.resetAudioState();
 
     _state = _state.copyWith(GameStateUpdate(
       turnTimeLeft: newTurnLength,
@@ -376,7 +379,8 @@ class GameProvider extends ChangeNotifier {
     _state.players.updatePlayer(currentPlayer);
 
     // Fix: Assign the state update properly
-    _state = _state.copyWith(GameStateUpdate(  // Add assignment operator here
+    _state = _state.copyWith(GameStateUpdate(
+      // Add assignment operator here
       currentObject: object,
       currentObjectColor: color,
       players: _state.players,
