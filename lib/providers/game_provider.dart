@@ -7,6 +7,7 @@ import '../services/storage_service.dart';
 import '../services/audio_service.dart';
 import '../models/game_state.dart';
 import '../models/game_event.dart';
+import '../models/game_interruption.dart';
 import '../services/game_logic.dart';
 import '../services/event_handler.dart';
 import '../services/logging_service.dart';
@@ -22,6 +23,7 @@ class GameProvider extends ChangeNotifier {
   Timer? _gameTimer;
   late int _gameId;
   late int _userId;
+  int playerTurnCount = 1;
 
   GameProvider({
     required AudioService audioService,
@@ -53,7 +55,7 @@ class GameProvider extends ChangeNotifier {
     final players = playerNames.map((name) => Player(name: name)).toList();
     final turnTimeLeft = gameMode.calculateTurnLength(players.length);
     final currentPlayerIndex =
-        DateTime.now().millisecondsSinceEpoch % players.length;
+        0; // DateTime.now().millisecondsSinceEpoch % players.length;
 
     _state = _state.copyWith(GameStateUpdate(
       gameMode: gameMode,
@@ -63,9 +65,10 @@ class GameProvider extends ChangeNotifier {
       status: GameStatus.ready,
       clearCurrentObject: true,
       clearCurrentObjectColor: true,
-      clearCurrentEvent: true,
-      clearCurrentChoice: true,
-      choices: [],
+      clearCurrentInterruption: true,
+      // clearCurrentEvent: true,
+      // clearCurrentChoice: true,
+      // choices: [],
     ));
 
     notifyListeners();
@@ -105,13 +108,13 @@ class GameProvider extends ChangeNotifier {
   }
 
   void endTurn() {
-    if (_state.status == GameStatus.playing) {
-      if (_state.status == GameStatus.playing) {
-        _state = _state.copyWith(GameStateUpdate(
-          turnTimeLeft: 0.1,
-        ));
-        notifyListeners();
-      }
+    // Preliminary ends the turn
+    if (_state.status == GameStatus.playing ||
+        _state.status == GameStatus.winTest) {
+      _state = _state.copyWith(GameStateUpdate(
+        turnTimeLeft: 0.1,
+      ));
+      notifyListeners();
     }
   }
 
@@ -124,69 +127,44 @@ class GameProvider extends ChangeNotifier {
   }
 
   void _handleTimerTick(Timer timer) async {
-    if (_state.status == GameStatus.eventChoice ||
-        _state.status == GameStatus.winTestConfirmation) {
+    if (_state.currentInterruption != null) {
       return;
     }
 
     if (_state.turnTimeLeft <= 0) {
       await _handleTurnEnd();
-    } else {
-      final newTimeLeft = _state.turnTimeLeft - 0.1;
-      _state = _state.copyWith(GameStateUpdate(
-        turnTimeLeft: newTimeLeft,
-      ));
-      // _loggingService.log('Heartbeat method trigger', data:{});
-      await _playHeartbeatSounds();
-      notifyListeners();
     }
-  }
 
-  Future<void> _playHeartbeatSounds() async {
+    final newTimeLeft = _state.turnTimeLeft - 0.1;
+    _state = _state.copyWith(GameStateUpdate(
+      turnTimeLeft: newTimeLeft,
+    ));
+
     await _audioService.playHeartbeat(_state.turnTimeLeft);
+    notifyListeners();
   }
 
   Future<void> _handleTurnEnd() async {
     // Handle win test results if active.
-    if (state.status == GameStatus.winTest) {
-      _gameTimer?.cancel();
-      _showWinTestButtons();
+    if (_state.status == GameStatus.winTest) {
+      _handleInterruption(
+          WinTestInterruption(null, phase: WinTestPhase.result));
       return;
     }
-
-    _loggingService.log(
-      'turn_end',
-      data: {
-        'player': currentPlayer.name,
-        'round': _state.currentRound,
-        'objects_count': {
-          'red': currentPlayer.redObjects,
-          'green': currentPlayer.greenObjects,
-          'key': currentPlayer.keyObjectCount,
-        },
-      },
-    );
 
     _gameTimer?.cancel();
     await _audioService.playEndTurn();
 
-    // Handle any pending event before ending the turn
-    if (_state.status == GameStatus.eventChoice &&
-        _state.currentEvent != null) {
-      final newState = _state.currentEvent!.execute(_state, 0);
-      // Make sure to reset the status to playing
-      _state = newState.copyWith(GameStateUpdate(
-        status: GameStatus.playing,
-      ));
-    }
-
-    if (_checkGameFinish()) {
-      await _endGame();
-      return;
-    }
-
-    if (_shouldStartNewRound()) {
-      await _startNewRound();
+    // Check if round is complete
+    // TODO: Fix round end bug when last player is eliminated. 
+    // Interruption is shown after 1st player then, not before.
+    if (playerTurnCount >= _state.players.length) {
+      if (_state.gameMode is MasterGameMode) {
+        _incrementRound();
+      } else {
+        _handleInterruption(RoundEndInterruption());
+        return;
+      }
     }
 
     _moveToNextPlayer();
@@ -198,36 +176,22 @@ class GameProvider extends ChangeNotifier {
   }
 
   void _moveToNextPlayer() {
-    final newIndex = _state.turnRotationClockwise
+    // Calculate new player index
+    final int newIndex = _state.turnRotationClockwise
         ? (_state.currentPlayerIndex + 1) % _state.players.length
         : (_state.currentPlayerIndex - 1 + _state.players.length) %
             _state.players.length;
 
+    // Save new player index
     _state = _state.copyWith(GameStateUpdate(
       currentPlayerIndex: newIndex,
     ));
-  }
 
-  bool _shouldStartNewRound() {
-    return (_state.currentPlayerIndex +
-                (_state.turnRotationClockwise ? 1 : -1)) %
-            _state.players.length ==
-        0;
-  }
+    playerTurnCount++;
 
-  Future<void> _startNewRound() async {
-    final newRound = _state.currentRound + 1;
-    _state = _state.copyWith(GameStateUpdate(
-      currentRound: newRound,
-    ));
-
-    // await _storageService.logGameEvent(
-    //   turnRound: newRound,
-    //   playerId: currentPlayer.id,
-    //   playerName: currentPlayer.name,
-    //   event: 'round_start',
-    //   extra: newRound.toString(),
-    // );
+    if (_state.players[newIndex].isEliminated) {
+      _moveToNextPlayer();
+    }
   }
 
   void _resetTurn() {
@@ -236,16 +200,15 @@ class GameProvider extends ChangeNotifier {
       _state.currentRound,
     );
 
-    // _audioService.resetAudioState();
-
     _state = _state.copyWith(GameStateUpdate(
       turnTimeLeft: newTurnLength,
       additionalTime: 0.0,
       clearCurrentObject: true,
       clearCurrentObjectColor: true,
-      clearCurrentEvent: true,
+      clearCurrentInterruption: true,
+      clearCurrentEventDescription: true,
       clearCurrentChoice: true,
-      choices: [],
+      // clearCurrentEvent: true,
     ));
   }
 
@@ -257,109 +220,103 @@ class GameProvider extends ChangeNotifier {
     final GameEvent? event = EventManager.createEvent(_state);
 
     if (event != null) {
-      _handleEvent(event);
+      _handleInterruption(EventInterruption(event));
     } else {
       // Generate a new object if no event is triggered
       _generateRandomObject();
     }
   }
 
-  void _handleEvent(GameEvent event) {
-    // Log event
-    _loggingService.log(
-      'event_triggered',
-      data: {
-        'event_type': event.type.toString(),
-        'description': event.description,
-        'player': currentPlayer.name,
-        'round': _state.currentRound,
-        'choices': event.getChoices(),
-      },
-    );
-
-    if (event.resetsEventChance) {
-      // Reset the probability for this event type
-      state.currentPlayer.storedEventProbabilities[event.type] = 0.0;
-    }
-
-    // Pause the game timer when event triggers in fun mode
+  void _handleInterruption(GameInterruption interruption) {
     _gameTimer?.cancel();
 
     _state = _state.copyWith(GameStateUpdate(
-      currentEvent: event,
-      choices: event.getChoices(),
-      status: event.type == EventType.win
-          ? GameStatus.winTestConfirmation
-          : GameStatus.eventChoice,
-      additionalTime: event.additionalTime,
-      turnTimeLeft: _state.turnTimeLeft + event.additionalTime,
-      clearCurrentObject: true,
-      clearCurrentObjectColor: true,
-    ));
-
-    // If the event doesn't require confirmation, execute it immediately (but not in beginner mode)
-    if ((!event.requiresConfirmation) &&
-        (_state.gameMode is! BeginnerGameMode)) {
-      final newState = event.execute(_state, 0);
-      _state = newState.copyWith(GameStateUpdate(
-        status: GameStatus.playing,
-        currentChoice: event.choices.displayNames[0],
-        choices: [],
-      ));
-      _startTimer();
-    }
+        status: GameStatus.interrupted,
+        currentInterruption: interruption,
+        clearCurrentChoice: true));
 
     notifyListeners();
   }
 
-  void handleEventChoice(int choice) {
-    // Handle win test if active
-    if (_state.status == GameStatus.winTestConfirmation) {
-      _state = _state.copyWith(GameStateUpdate(
-        status: GameStatus.winTest,
-        currentChoice: _state.choices[choice],
-        choices: [],
-      ));
-      _startTimer();
-      notifyListeners();
-      return;
-    } else if (_state.status == GameStatus.winTest) {
-      _handleWinEventChoice(choice);
-      return;
+  void handleInterruptionChoice(int choice) {
+    final interruption = _state.currentInterruption;
+    if (interruption == null) return;
+
+    if (interruption is EventInterruption) {
+      _handleEventInterruptionChoice(interruption, choice);
+    } else if (interruption is WinTestInterruption) {
+      _handleWinTestInterruptionChoice(interruption, choice);
+    } else if (interruption is RoundEndInterruption) {
+      _handleRoundEndInterruptionChoice(interruption, choice);
     }
+  }
 
-    if (_state.status == GameStatus.eventChoice &&
-        _state.currentEvent != null) {
-      final event = _state.currentEvent!;
-
-      // Log the event choice
-      _loggingService.log(
-        'event_choice',
-        data: {
-          'event_type': event.type.toString(),
-          'description': event.description,
-          'choice_index': choice,
-          'choice_text': event.choices.displayNames[choice],
-          'player': currentPlayer.name,
-          'round': _state.currentRound,
-        },
-      );
-
-      // Execute event and get new state
-      final GameState newState = event.execute(_state, choice);
-
-      // Update state with event results and reset event status
-      _state = newState.copyWith(GameStateUpdate(
+  void _handleEventInterruptionChoice(
+      EventInterruption interruption, int choice) {
+    final newState = interruption.event.execute(_state, choice);
+    _state = newState.copyWith(GameStateUpdate(
         status: GameStatus.playing,
-        currentChoice: event.choices.displayNames[choice],
-        choices: [],
-      ));
+        currentEventDescription: interruption.event.description,
+        currentChoice: interruption.getChoices()[choice],
+        clearCurrentInterruption: true));
+    _startTimer();
+    notifyListeners();
+  }
 
-      // Start the game timer again
-      _startTimer();
+  void _handleWinTestInterruptionChoice(
+      WinTestInterruption interruption, int choice) {
+    switch (interruption.phase) {
+      case WinTestPhase.confirmation:
+        _state = _state.copyWith(GameStateUpdate(
+          turnTimeLeft: _state.gameMode.calculateTurnLength(
+                  _state.players.length, _state.currentRound) +
+              interruption.winEvent!.additionalTime,
+          status: GameStatus.winTest,
+          clearCurrentObject: true,
+          clearCurrentObjectColor: true,
+          clearCurrentInterruption: true,
+          currentChoice: interruption.winEvent!.getChoices()[0],
+          currentEventDescription: interruption.winEvent!.description,
+        ));
+        _startTimer();
+        notifyListeners();
+        break;
 
-      notifyListeners();
+      case WinTestPhase.test:
+        // _handleInterruption(WinTestInterruption(interruption.winEvent, phase: WinTestPhase.result));
+        break;
+
+      case WinTestPhase.result:
+        if (choice == 0) {
+          _handleWinSuccess();
+        } else {
+          _handleWinFailure();
+        }
+        _state = _state.copyWith(GameStateUpdate(
+          status: GameStatus.playing,
+          clearCurrentInterruption: true,
+        ));
+        _handleTurnEnd();
+        break;
     }
+    notifyListeners();
+  }
+
+  void _handleRoundEndInterruptionChoice(
+      RoundEndInterruption interruption, int choice) {
+    _incrementRound();
+    _startTimer();
+  }
+
+  void _incrementRound() {
+    playerTurnCount = 0;
+    final newRound = _state.currentRound + 1;
+
+    _state = _state.copyWith(GameStateUpdate(
+      status: GameStatus.playing,
+      currentRound: newRound,
+      clearCurrentInterruption: true,
+    ));
   }
 
   void _accumulateEventProbabilities() {
@@ -409,43 +366,8 @@ class GameProvider extends ChangeNotifier {
 
   void startWinTest() {
     GameEvent winEvent = EventManager.createWinEvent(_state);
-    _handleEvent(winEvent);
-  }
-
-  void _showWinTestButtons() {
-    // After win test, show success and failure buttons
-    _state = _state.copyWith(GameStateUpdate(
-      choices: ['Success', 'Failure'],
-      clearCurrentObject: true,
-      clearCurrentObjectColor: true,
-    ));
-
-    notifyListeners();
-  }
-
-  void _handleWinEventChoice(int choice) {
-    if (choice == 0) {
-      _handleWinSuccess();
-    } else {
-      _handleWinFailure();
-    }
-
-    _loggingService.log(
-      'win_test_choice',
-      data: {
-        'player': currentPlayer.name,
-        'round': _state.currentRound,
-        'choice': choice,
-      },
-    );
-
-    _state = _state.copyWith(GameStateUpdate(
-      status: GameStatus.playing,
-      currentChoice: _state.choices[choice],
-      choices: [],
-    ));
-
-    _handleTurnEnd();
+    _handleInterruption(
+        WinTestInterruption(winEvent, phase: WinTestPhase.confirmation));
   }
 
   void _handleWinSuccess() {
@@ -453,13 +375,19 @@ class GameProvider extends ChangeNotifier {
     currentPlayer.isWinner = _state.players.every((player) => !player.isWinner);
     // After win, player is eliminated
     currentPlayer.isEliminated = true;
-    _state.players.updatePlayer(currentPlayer);
+    _state = _state.copyWith(
+        GameStateUpdate(players: _state.players.updatePlayer(currentPlayer)));
+
+    if (_checkGameFinish()) {
+      _endGame();
+    }
   }
 
   void _handleWinFailure() {
     // If not first to win, player is eliminated
     currentPlayer.removeKeyObject();
-    _state.players.updatePlayer(currentPlayer);
+    _state = _state.copyWith(
+        GameStateUpdate(players: _state.players.updatePlayer(currentPlayer)));
   }
 
   bool _checkGameFinish() {
@@ -476,11 +404,9 @@ class GameProvider extends ChangeNotifier {
     _state = _state.copyWith(GameStateUpdate(
       status: GameStatus.gameOver,
       // players: updatedPlayers,
-      clearCurrentEvent: true,
       clearCurrentObject: true,
       clearCurrentObjectColor: true,
-      clearCurrentChoice: true,
-      choices: [],
+      clearCurrentInterruption: true,
     ));
 
     await _audioService.playWin();

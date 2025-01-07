@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:math' as math;
 
 import '../../models/game_state.dart';
@@ -56,9 +56,9 @@ class GameScreen extends StatelessWidget {
       body: Consumer<GameState>(
         builder: (context, gameState, child) {
           // Only show event description if we're in eventChoice status
-          final displayText = gameState.currentEvent != null
-              ? gameState.currentEvent?.description ?? ''
-              : gameState.currentObject ?? '';
+          final displayText = gameState.currentInterruption != null
+              ? gameState.currentInterruption?.description ?? ''
+              : gameState.currentObject ?? gameState.currentEventDescription ?? '';
 
           return SafeArea(
             child: Column(
@@ -121,19 +121,15 @@ class GameScreen extends StatelessWidget {
               child: SizedBox(
                 width: objectSize * 2,
                 height: objectSize * 2,
-                child: (gameState.currentEvent != null) &&
-                        (gameState.status == GameStatus.eventChoice ||
-                            gameState.status ==
-                                GameStatus.winTestConfirmation ||
-                            gameState.status == GameStatus.winTest)
+                child: (gameState.currentInterruption != null)
                     ? EventButtons()
                     : ObjectDisplay(
                         objectName: gameState.currentChoice ??
                             gameState.currentObject ??
                             '',
                         objectColor:
-                            gameState.currentObjectColor ?? Colors.black,
-                        forceTextDisplay: gameState.currentEvent != null,
+                            gameState.currentObjectColor ?? Colors.white,
+                        forceTextDisplay: gameState.currentChoice != null,
                       ),
               ),
             ),
@@ -169,10 +165,11 @@ class GameScreen extends StatelessWidget {
         'x': centerX + (radius * math.cos(math.pi / 4)),
         'y': centerY - (radius * math.sin(math.pi / 4)),
         'icon': Icon(
-          gameState.status == GameStatus.playing ||
-                  gameState.status == GameStatus.eventChoice
-              ? FontAwesomeIcons.pause
-              : FontAwesomeIcons.play,
+          gameState.status == GameStatus.playing
+              // ? FontAwesomeIcons.pause
+              ? Icons.pause
+              // : FontAwesomeIcons.play,
+              : Icons.play_arrow,
           color: FlavaTheme.primaryColor,
         ),
         'onPressed': () => _handlePause(context),
@@ -181,23 +178,24 @@ class GameScreen extends StatelessWidget {
       {
         'x': centerX - (radius * math.cos(math.pi / 4)),
         'y': centerY - (radius * math.sin(math.pi / 4)),
-        'icon': Icon(FontAwesomeIcons.forward, color: FlavaTheme.primaryColor),
+        // 'icon': Icon(FontAwesomeIcons.forward, color: FlavaTheme.primaryColor),
+        'icon': Icon(Icons.forward, color: FlavaTheme.primaryColor),
         'onPressed': () => _handleEndTurn(context),
       },
       // Bottom-right (Exit)
       {
         'x': centerX + (radius * math.cos(math.pi / 4)),
         'y': centerY + (radius * math.sin(math.pi / 4)),
-        'icon': Icon(FontAwesomeIcons.rightFromBracket,
-            color: FlavaTheme.primaryColor),
+        // 'icon': Icon(FontAwesomeIcons.rightFromBracket,
+        'icon': Icon(Icons.exit_to_app, color: FlavaTheme.primaryColor),
         'onPressed': () => _handleExit(context),
       },
       // Bottom-left (Finish)
       {
         'x': centerX - (radius * math.cos(math.pi / 4)),
         'y': centerY + (radius * math.sin(math.pi / 4)),
-        'icon': Icon(FontAwesomeIcons.flagCheckered,
-            color: FlavaTheme.primaryColor),
+        // 'icon': Icon(FontAwesomeIcons.flagCheckered,
+        'icon': Icon(Icons.flag, color: FlavaTheme.primaryColor),
         'onPressed': () => _handleWinTest(context), // No action for now
       },
     ];

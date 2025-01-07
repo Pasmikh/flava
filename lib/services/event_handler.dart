@@ -11,12 +11,12 @@ import '../models/game_event.dart';
 class EventManager {
   static GameEvent? createEvent(GameState state) {
     // For testing purposes, we can force an event type
-    if (state.currentRound == 3) {
-      return createGiveOneLeftEvent(state);
-      // return createGetKeyObjectEvent(state);
-    } else if (state.currentRound == 4) {
-      return createDropObjectEvent(state);
-    }
+    // if (state.currentRound == 3) {
+    //   return createGiveOneLeftEvent(state);
+    //   // return createGetKeyObjectEvent(state);
+    // } else if (state.currentRound == 4) {
+    //   return createDropObjectEvent(state);
+    // }
 
     // First determine if we should trigger an event
     final EventType? eventType = rollEventType(state);

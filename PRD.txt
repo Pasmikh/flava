@@ -1,0 +1,245 @@
+**Product Requirements Document: Flava - Board Game App**
+
+**1. App Objectives & Overview**
+
+*   **Purpose:** The "Flava" app is a companion application designed to enhance the board game experience of the physical board game with the same name. It facilitates game setup, manages player turns, tracks game events, calculates scores, and provides a digital interface for various in-game actions. The Flutter version aims to deliver the same core functionality with improved UI/UX, performance, and potentially new features.
+*   **Game Components Integration:**
+    *   The app is designed to complement the physical board game components:
+        *   Creature boxes containing different colored creatures
+        *   "Ball" creatures (victory condition items)
+        *   Red and green creatures (must be held in separate hands)
+*   **Physical Game Rules:** This rules don't need to be integrated into the app. They are provided in printed instruction. But the following are the most important aspects for better context:
+    *   **Game Duration:** 10-15 minutes per session
+    *   **Victory Condition:** Collect four "Key" creatures of any color combination
+    *   **Special Actions:**
+        *   Players can trade four same-type creatures for one Key (once per round)
+        *   "Fly Away" action available when holding four Balls
+    *   **Penalty System:**
+        *   Ball discard required for:
+            *   Dropping any creature
+            *   Mixing red/green creatures in same hand
+            *   Missing time limit for instructions
+        *   Alternative penalty (when no Balls available):
+            *   Must take one red and one green creature of different types
+*   **Target Audience:** Players of the "Flava" board game, who are looking for a digital tool to streamline gameplay, track progress, and potentially offer variations or expansions of the physical game.
+*   **High-Level User Stories:**
+    *   As a player, I want to easily create a new game session, define the number of players, and enter their names.
+    *   As a player, I want to have a clear visual indication of whose turn it is and what actions they need to take.
+    *   As a player, I want the app to track in-game events and statistics.
+    *   As a player, I want to be able to refer to the game rules within the app easily.
+    *   As a player, I want the app to guide me through the steps of each round and handle special events.
+    *   As a player, I want the app to determine the end of the game.
+
+**2. Feature Set & Functional Requirements**
+
+**Existing Features:**
+
+*   **Game Setup:**
+    *   Define the number of players (2-5).
+    *   Enter player names.
+    *   Select game mode (Beginner, Fun, Master, Onboarding).
+    *   Randomize player turn order.
+*   **Gameplay:**
+    *   Display the current player's turn.
+    *   Timer for each turn with adjustable length based on the game mode and round.
+    *   Visual representation of the current turn's objective (e.g., "Take a red object").
+    *   "Pause" and "Next Turn" functionality.
+    *   In-game event triggers (e.g., "Get 3", "Drop Object", "Switch Hands").
+    *   Event logging for statistics.
+    *   Sound effects for key events (e.g., end of turn, win).
+    *   "Win Test" mode to simulate end-game scenarios.
+*   **Game Modes:**
+    *   **Learn Mode (Onboarding):**
+        *   Extended turn times (8.0s base)
+        *   Simplified event system
+        *   Higher success probabilities
+        *   Built-in tutorials
+        *   Event confirmation required
+
+    *   **Fun Mode (Standard):**
+        *   Balanced turn times (6.0s base)
+        *   Full event system
+        *   Standard probabilities
+        *   Optional event confirmation
+
+    *   **Master Mode (Advanced):**
+        *   Reduced turn times (6.8s initial, scaling down)
+        *   Complex event chains
+        *   Challenging probabilities
+        *   No event confirmation
+        *   Advanced strategic elements
+
+*   **Game Modes:**
+    *   **Event Categories:**
+        *   Take Events: Object acquisition
+        *   Drop Events: Forced object removal
+        *   Other Events: Special actions
+        *   Strategic Events: Complex interactions
+        *   Win Events: Victory conditions
+
+    *   **Event Generation:**
+        *   Dynamic probability system
+        *   Round-based event unlocking
+        *   Player state influence
+        *   Mode-specific modifiers
+
+    *   **Event Handling:**
+        *   Clear interruption system
+        *   Choice-based interactions
+        *   Timer modifications
+        *   State updates
+
+
+**3. User Experience & UI Flow**
+
+**Screen-by-Screen Description:**
+
+1. **Define Players Screen:**
+    *   **Input Field:** Text field to enter a player's name.
+    *   **"Add Player" Button:** Adds the entered name to the player list (up to 5 players).
+    *   **"Clear Players" Button:** Clears all entered player names.
+    *   **Game Mode Selection Buttons:** Buttons to select "Learn" (Onboarding), "Have Fun," "Master" modes.
+    *   **"Next" Button:** Proceeds to the "Ready Check" screen.
+    *   **"Next Test" Button:** Begins a new game in a non-infinite test mode.
+    *   **"Next Test Inf" Button:** Begins a new game in an infinite test mode.
+2. **Ready Check Screen:**
+    *   Displays the message "Get Ready!"
+    *   Shows the number of players.
+    *   **"Start" Button:** Initiates the game and proceeds to the "Game" screen.
+3. **Game Screen:**
+    *   **Top Player Name:** Displays the name of the player whose turn it is (rotated 180 degrees).
+    *   **Top Turn Text:** Displays the current turn's objective (rotated 180 degrees).
+    *   **Center:**
+        *   **Circular Timer:** Visual representation of the remaining turn time.
+        *   **Object Image:** Displays an image of the object related to the current turn's objective.
+        *   **Event Choice Buttons:** Four buttons in the center for event selection when applicable.
+        *   **Middle Text (Up/Down):** Displays text related to events (rotated as needed).
+    *   **Bottom Player Name:** Displays the name of the current player.
+    *   **Bottom Turn Text:** Displays the current turn's objective.
+    *   **"Pause/Resume" Button:** Pauses or resumes the game timer.
+    *   **"Exit" Button:** Returns to the main menu.
+    *   **"Next Turn" Button:** Manually advances to the next turn.
+    *   **"Win Test" Button:** Initiates a win test scenario.
+
+**Transitions & Animations:**
+
+*   Smooth transitions between screens.
+*   The circular timer should animate smoothly, filling or emptying based on the remaining time.
+*   The event choice buttons should appear with a smooth animation when an event is triggered.
+*   Object images could have a subtle animation (e.g., a slight bounce or glow) when they appear.
+
+**Graphical Elements & Layout Suggestions:**
+
+*   The overall design should be clean, intuitive, and visually appealing.
+*   Use a consistent color scheme that aligns with the physical board game's aesthetics.
+*   Player names should be clearly visible and easy to read.
+*   The timer should be prominently displayed.
+*   Object images should be high-quality and recognizable.
+*   Consider using custom fonts that match the game's theme.
+*   The use of card-like UI elements for displaying information could enhance the board game feel.
+
+**4. Technical Specifications & Architecture**
+
+*   **Development Framework:** Flutter
+*   **State Management:**
+    *   Centralized game state using Provider
+    *   Immutable state updates
+    *   Clear state lifecycle management
+    *   Real-time state synchronization
+
+*   **Core Services:**
+    *   AudioService: Sound effects and timing cues
+    *   EventHandler: Game event generation and processing
+    *   GameLogic: Core game rules and calculations
+    *   StorageService: Game state persistence
+    *   LoggingService: Event and error tracking
+
+*   **Data Models:**
+    *   GameState: Complete game status
+    *   Player: Player data and inventory
+    *   GameEvent: Event system
+    *   GameMode: Game rule variations
+    *   GameInterruption: Special game states
+
+*   **Data Flow:**
+    *   The app initializes with default settings.
+    *   User input (player names, game mode) updates the game state.
+    *   The "Start" button triggers the game loop.
+    *   The game loop progresses through player turns, manages the timer, and triggers events.
+    *   Game events update player objects (e.g., adding or removing objects).
+    *   The app checks for win conditions when win test is triggered.
+    *   Game statistics are updated throughout the game.
+
+*   ** Implementation Guidelines**
+    *   **Code Architecture:**
+        *   Clear separation of concerns
+        *   Dependency injection
+        *   Service-based architecture
+        *   Event-driven design
+
+    *   **State Flow:**
+        *   Unidirectional data flow
+        *   Immutable state updates
+        *   Clear state transitions
+        *   Predictable side effects
+
+    *   **UI Implementation:**
+        *   Composition over inheritance
+        *   Reusable widgets
+        *   Responsive design
+        *   Accessibility support
+
+    *   **Testing Strategy:**
+        *   Unit tests for logic
+        *   Widget tests for UI
+        *   Integration tests for flow
+        *   Performance benchmarks
+
+**5. Edge Cases & Error Handling**
+
+*   **Input Validation:**
+    *   Ensure player names are not empty.
+    *   Limit the number of players to 2-5.
+    *   Validate that selected objects in events are valid.
+*   **Timer Handling:**
+    *   Ensure the timer pauses correctly when the app is in the background or interrupted.
+    *   Handle cases where the timer reaches zero (triggering the next turn).
+*   **Event Handling:**
+    *   Ensure events are triggered correctly based on game logic.
+    *   Handle cases where an event cannot be completed (e.g., a player doesn't have the required object).
+*   **Network Connectivity (if online features are implemented):**
+    *   Gracefully handle network interruptions.
+    *   Provide informative messages to the user when a network error occurs.
+    *   Implement offline functionality where possible.
+*   **Concurrency:**
+    *   If implementing asynchronous operations, ensure proper synchronization to avoid race conditions.
+
+**6. Acceptance Criteria & KPIs**
+
+**Acceptance Criteria:**
+
+*   **Game Setup:**
+    *   The app should allow 2-5 players to be added.
+    *   Player names should be correctly captured and displayed.
+    *   Game mode selection should function as described.
+*   **Gameplay:**
+    *   The timer should accurately reflect the remaining turn time.
+    *   The current player and turn objective should be clearly displayed.
+    *   Events should be triggered according to the defined rules.
+    *   "Pause" and "Next Turn" should function correctly.
+    *   The app should correctly determine the winner based on game rules.
+    *   New game can be launched after a game ends
+*   **Test Mode:**
+    *   Test mode should allow for rapid testing of game logic.
+    *   Infinite test mode should continuously simulate games.
+*   **Other:**
+	*   App can be hosted as a PWA
+	*	App can be opened in full screen on mobile device
+	*   App can turn on "Do not disturb" mode
+
+**Key Performance Indicators (KPIs):**
+
+*   **App Load Time:** The app should load quickly and efficiently.
+*   **Responsiveness:** UI elements should respond promptly to user interactions.
+*   **Battery Usage:** The app should have minimal impact on device battery life.
+*   **Crash Rate:** The app should be stable and have a low crash rate.

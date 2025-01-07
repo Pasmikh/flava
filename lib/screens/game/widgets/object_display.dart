@@ -105,7 +105,7 @@ class _ObjectDisplayState extends State<ObjectDisplay>
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
             color: FlavaTheme
-                .primaryColor, // or any color you want for confirmation button
+                .secondaryColor, // or any color you want for confirmation button
           ),
         ),
       );

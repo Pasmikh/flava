@@ -16,7 +16,8 @@ class EventButtons extends StatelessWidget {
         return LayoutBuilder(
           builder: (context, constraints) {
             final buttonSize = min(constraints.maxWidth, constraints.maxHeight);
-            final choicesCount = gameState.currentEvent?.choices.length ?? 0;
+            final choicesCount =
+                gameState.currentInterruption?.getChoices().length ?? 0;
 
             return SizedBox(
               width: buttonSize,
@@ -33,7 +34,7 @@ class EventButtons extends StatelessWidget {
                     painter: CircularSectionsPainter(
                       sections: choicesCount,
                       choices:
-                          gameState.currentEvent?.choices.displayNames ?? [],
+                          gameState.currentInterruption?.getChoices() ?? [],
                     ),
                   ),
                 ),
@@ -80,7 +81,7 @@ class EventButtons extends StatelessWidget {
         return;
     }
 
-    context.read<GameProvider>().handleEventChoice(section);
+    context.read<GameProvider>().handleInterruptionChoice(section);
   }
 }
 

@@ -68,7 +68,9 @@ abstract class GameMode {
   double calculateKeyProbability(int currentRound, int currentKeyCount) {
     // Prevent key object probability if player already has many key objects until round 12
     if (currentKeyCount >= (requiredKeyObjectsToWin - 1) &&
-        currentRound < minRoundsForFinalKeyObject) return 0.0;
+        currentRound < minRoundsForFinalKeyObject) {
+      return 0.0;
+    }
     // Increase probability with rounds. After round 7, it grows linearly by 1/7 per round.
     return keyObjectProbability *
         (math.max(keyProbabilityGrowthRounds, currentRound) /

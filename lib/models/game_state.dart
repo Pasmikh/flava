@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flava/models/game_mode.dart';
 import 'package:flava/models/player.dart';
-import 'package:flava/models/game_event.dart';
+import 'package:flava/models/game_interruption.dart';
 
 enum GameStatus {
   initial,
   ready,
   playing,
   paused,
-  eventChoice,
-  winTestConfirmation,
+  interrupted,
   winTest,
-  gameOver,
+  gameOver
 }
 
 class GameState {
@@ -30,9 +29,13 @@ class GameState {
   // Game objects and events
   final String? currentObject;
   final Color? currentObjectColor;
-  final GameEvent? currentEvent;
-  final List<String> choices;
+  // final GameEvent? currentEvent;
+  // final List<String> choices;
+  final GameInterruption? currentInterruption;
+  final String? currentEventDescription;
   final String? currentChoice;
+
+  //
 
   const GameState({
     required this.gameMode,
@@ -45,9 +48,11 @@ class GameState {
     this.additionalTime = 0.0,
     this.currentObject,
     this.currentObjectColor,
-    this.currentEvent,
-    this.choices = const [],
+    this.currentInterruption,
+    this.currentEventDescription,
     this.currentChoice,
+    // this.currentEvent,
+    // this.choices = const [],
   });
 
   // Computed properties
@@ -76,13 +81,19 @@ class GameState {
         currentObjectColor: update.clearCurrentObjectColor
             ? null
             : (update.currentObjectColor ?? currentObjectColor),
-        currentEvent: update.clearCurrentEvent
+        currentInterruption: update.clearCurrentInterruption
             ? null
-            : (update.currentEvent ?? currentEvent),
-        choices: update.choices ?? choices,
+            : (update.currentInterruption ?? currentInterruption),
+        currentEventDescription: update.clearCurrentEventDescription
+            ? null
+            : (update.currentEventDescription ?? currentEventDescription),
         currentChoice: update.clearCurrentChoice
             ? null
             : (update.currentChoice ?? currentChoice));
+    // currentEvent: update.clearCurrentEvent
+    //     ? null
+    //     : (update.currentEvent ?? currentEvent),
+    // choices: update.choices ?? choices,
   }
 }
 
@@ -97,12 +108,14 @@ class GameStateUpdate {
   final double? additionalTime;
   final String? currentObject;
   final Color? currentObjectColor;
-  final GameEvent? currentEvent;
-  final List<String>? choices;
+  final GameInterruption? currentInterruption;
+  final String? currentEventDescription;
+  // final List<String>? choices;
   final String? currentChoice;
   final bool clearCurrentObject;
   final bool clearCurrentObjectColor;
-  final bool clearCurrentEvent;
+  final bool clearCurrentInterruption;
+  final bool clearCurrentEventDescription;
   final bool clearCurrentChoice;
 
   GameStateUpdate({
@@ -116,12 +129,15 @@ class GameStateUpdate {
     this.additionalTime,
     this.currentObject,
     this.currentObjectColor,
-    this.currentEvent,
-    this.choices,
+    this.currentInterruption,
+    // this.currentEvent,
+    // this.choices,
+    this.currentEventDescription,
     this.currentChoice,
     this.clearCurrentObject = false,
     this.clearCurrentObjectColor = false,
-    this.clearCurrentEvent = false,
+    this.clearCurrentInterruption = false,    
+    this.clearCurrentEventDescription = false,
     this.clearCurrentChoice = false,
   });
 }
