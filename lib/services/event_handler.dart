@@ -12,10 +12,21 @@ class EventManager {
   static GameEvent? createEvent(GameState state) {
     // For testing purposes, we can force an event type
     // if (state.currentRound == 3) {
-    //   return createGiveOneLeftEvent(state);
-    //   // return createGetKeyObjectEvent(state);
+    //   switch (state.currentPlayerIndex) {
+    //     case 0: return createSwitchHandsEvent(state);
+    //     case 1: return createGiveOneLeftEvent(state);
+    //     case 2: return createGiveOneAnyEvent(state);
+    //     case 3: return createStealKeyEvent(state);
+    //     default: return null;
+    //   }
     // } else if (state.currentRound == 4) {
-    //   return createDropObjectEvent(state);
+    //   switch (state.currentPlayerIndex) {
+    //     case 0: return createExchangeHandsRedEvent(state);
+    //     case 1: return createExchangeHandsGreenEvent(state);
+    //     // case 2: return createSwitchHandsEvent(state);
+    //     // case 3: return createGiveOneRightEvent(state);
+    //     default: return null;
+    //   }
     // }
 
     // First determine if we should trigger an event

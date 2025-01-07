@@ -1,3 +1,4 @@
+import 'package:flava/screens/game_stats_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
@@ -63,6 +64,7 @@ class FlavaApp extends StatelessWidget {
         AppRoutes.playerSetup: (context) => const PlayerSetupScreen(),
         AppRoutes.readyCheck: (context) => const ReadyCheckScreen(),
         AppRoutes.game: (context) => const GameScreen(),
+        AppRoutes.gameStats: (context) => const GameStatsScreen(),
       },
       builder: (context, child) {
         // Apply any app-wide configurations here

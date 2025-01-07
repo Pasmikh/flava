@@ -16,6 +16,7 @@ import '../extensions/player_list_extension.dart';
 
 class GameProvider extends ChangeNotifier {
   late GameState _state;
+  VoidCallback? _onGameOver;
 
   final LoggingService _loggingService = LoggingService();
   final AudioService _audioService;
@@ -40,8 +41,10 @@ class GameProvider extends ChangeNotifier {
   // Getters
   GameState get state => _state;
   List<Player> get players => _state.players;
+  int get currentPlayerIndex => _state.currentPlayerIndex;
   Player get currentPlayer => _state.players[_state.currentPlayerIndex];
   bool get isPaused => _state.status == GameStatus.paused;
+  bool get isGameOver => _state.status == GameStatus.gameOver;
 
   // Future<void> _initializeTracking() async {
   //   _userId = _storageService.getUserId();
@@ -56,19 +59,21 @@ class GameProvider extends ChangeNotifier {
     final turnTimeLeft = gameMode.calculateTurnLength(players.length);
     final currentPlayerIndex =
         0; // DateTime.now().millisecondsSinceEpoch % players.length;
+    playerTurnCount = 1;
 
     _state = _state.copyWith(GameStateUpdate(
+      currentRound: 1,
       gameMode: gameMode,
       players: players,
       currentPlayerIndex: currentPlayerIndex,
       turnTimeLeft: turnTimeLeft,
+      turnRotationClockwise: true,
       status: GameStatus.ready,
       clearCurrentObject: true,
       clearCurrentObjectColor: true,
+      clearCurrentChoice: true,
+      clearCurrentEventDescription: true,
       clearCurrentInterruption: true,
-      // clearCurrentEvent: true,
-      // clearCurrentChoice: true,
-      // choices: [],
     ));
 
     notifyListeners();
@@ -76,9 +81,17 @@ class GameProvider extends ChangeNotifier {
 
   void setupTestGame() {
     initializeGame(
-      playerNames: ['Andy', 'Bob', 'Celene', 'Dwayne'],
+      playerNames: ['Andy', 'Bob'],// 'Celene', 'Dwayne'],
       gameMode: FunGameMode(),
     );
+  }
+
+  void setGameOverCallback(VoidCallback callback) {
+    _onGameOver = callback;
+  }
+
+  void clearGameOverCallback() {
+    _onGameOver = null;
   }
 
   void startGame() {
@@ -195,13 +208,7 @@ class GameProvider extends ChangeNotifier {
   }
 
   void _resetTurn() {
-    final newTurnLength = _state.gameMode.calculateTurnLength(
-      _state.players.length,
-      _state.currentRound,
-    );
-
     _state = _state.copyWith(GameStateUpdate(
-      turnTimeLeft: newTurnLength,
       additionalTime: 0.0,
       clearCurrentObject: true,
       clearCurrentObjectColor: true,
@@ -210,6 +217,8 @@ class GameProvider extends ChangeNotifier {
       clearCurrentChoice: true,
       // clearCurrentEvent: true,
     ));
+
+    _resetTurnTimeLeft();
   }
 
   void _generateNewTurn() {
@@ -254,30 +263,39 @@ class GameProvider extends ChangeNotifier {
   void _handleEventInterruptionChoice(
       EventInterruption interruption, int choice) {
     final newState = interruption.event.execute(_state, choice);
+
     _state = newState.copyWith(GameStateUpdate(
         status: GameStatus.playing,
-        currentEventDescription: interruption.event.description,
+        additionalTime: interruption.additionalTime,
+        currentEventDescription: interruption.description,
         currentChoice: interruption.getChoices()[choice],
         clearCurrentInterruption: true));
+
+    _resetTurnTimeLeft();
     _startTimer();
     notifyListeners();
+  }
+
+  void _resetTurnTimeLeft() {
+    _state = _state.copyWith(GameStateUpdate(
+      turnTimeLeft: _state.gameMode.calculateTurnLength(_state.players.length, _state.currentRound) + _state.additionalTime
+    ));
   }
 
   void _handleWinTestInterruptionChoice(
       WinTestInterruption interruption, int choice) {
     switch (interruption.phase) {
       case WinTestPhase.confirmation:
-        _state = _state.copyWith(GameStateUpdate(
-          turnTimeLeft: _state.gameMode.calculateTurnLength(
-                  _state.players.length, _state.currentRound) +
-              interruption.winEvent!.additionalTime,
+        _state = _state.copyWith(GameStateUpdate(          
           status: GameStatus.winTest,
+          additionalTime: interruption.additionalTime,
           clearCurrentObject: true,
           clearCurrentObjectColor: true,
           clearCurrentInterruption: true,
           currentChoice: interruption.winEvent!.getChoices()[0],
-          currentEventDescription: interruption.winEvent!.description,
+          currentEventDescription: interruption.description,
         ));
+        _resetTurnTimeLeft();
         _startTimer();
         notifyListeners();
         break;
@@ -289,6 +307,9 @@ class GameProvider extends ChangeNotifier {
       case WinTestPhase.result:
         if (choice == 0) {
           _handleWinSuccess();
+          if (_state.status == GameStatus.gameOver){
+            return;
+          }
         } else {
           _handleWinFailure();
         }
@@ -375,8 +396,10 @@ class GameProvider extends ChangeNotifier {
     currentPlayer.isWinner = _state.players.every((player) => !player.isWinner);
     // After win, player is eliminated
     currentPlayer.isEliminated = true;
+
     _state = _state.copyWith(
-        GameStateUpdate(players: _state.players.updatePlayer(currentPlayer)));
+        GameStateUpdate(players: _state.players.updatePlayer(currentPlayer))
+        );
 
     if (_checkGameFinish()) {
       _endGame();
@@ -397,10 +420,7 @@ class GameProvider extends ChangeNotifier {
 
   Future<void> _endGame() async {
     _gameTimer?.cancel();
-
-    final String winnerPlayerName =
-        _state.players.firstWhere((p) => p.isWinner).name;
-
+  
     _state = _state.copyWith(GameStateUpdate(
       status: GameStatus.gameOver,
       // players: updatedPlayers,
@@ -413,6 +433,8 @@ class GameProvider extends ChangeNotifier {
     await _recordGameEnd();
 
     notifyListeners();
+
+    _onGameOver?.call();
   }
 
   Future<void> _recordGameEnd() async {

@@ -38,6 +38,7 @@ class LoggingService {
   }
 
   void _printLog(GameLog log) {
+    // ignore: avoid_print
     print('${log.timestamp} [${log.level}] ${log.event}: ${log.data}');
   }
 

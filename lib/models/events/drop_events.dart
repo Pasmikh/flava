@@ -25,6 +25,7 @@ GameEvent createDropThreeEvent(GameState state) {
         'a green object, and a key object',
     type: EventType.drop,
     requiresConfirmation: true,
+    additionalTime: 1,
     choices: choices,
     executeEvent: (currentState, choiceIndex) {
       if (choiceIndex == null) return currentState;

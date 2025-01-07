@@ -3,6 +3,7 @@ import '../screens/home/home_screen.dart';
 import '../screens/player_setup/player_setup_screen.dart';
 import '../screens/ready_check/ready_check_screen.dart';
 import '../screens/game/game_screen.dart';
+import '../screens/game_stats_screen.dart';
 
 class AppRoutes {
   // Route names
@@ -10,6 +11,7 @@ class AppRoutes {
   static const String playerSetup = '/player-setup';
   static const String readyCheck = '/ready-check';
   static const String game = '/game';
+  static const String gameStats = '/game-stats';
   static const String settings = '/settings';
   static const String statistics = '/statistics';
 
@@ -20,6 +22,7 @@ class AppRoutes {
       playerSetup: (context) => const PlayerSetupScreen(),
       readyCheck: (context) => const ReadyCheckScreen(),
       game: (context) => const GameScreen(),
+      gameStats: (context) => const GameStatsScreen(),
     };
   }
 
@@ -34,6 +37,10 @@ class AppRoutes {
 
   static Future<T?> navigateToGame<T>(BuildContext context) {
     return Navigator.pushReplacementNamed<T, void>(context, game);
+  }
+
+  static Future<T?> navigateToGameStats<T>(BuildContext context) {
+    return Navigator.pushReplacementNamed<T, void>(context, gameStats);
   }
 
   static Future<T?> navigateToSettings<T>(BuildContext context) {

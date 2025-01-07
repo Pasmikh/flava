@@ -10,9 +10,38 @@ import 'widgets/player_display.dart';
 import 'widgets/object_display.dart';
 import 'widgets/event_buttons.dart';
 import '../../config/theme.dart';
+import '../../config/routes.dart';
 
-class GameScreen extends StatelessWidget {
+class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
+
+  @override
+  State<GameScreen> createState() => _GameScreenState();
+}
+
+class _GameScreenState extends State<GameScreen> {
+  late final GameProvider gameProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    gameProvider = context.read<GameProvider>();
+    gameProvider.setGameOverCallback(_handleGameOver);
+  }
+
+  void _handleGameOver() {
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, AppRoutes.gameStats);
+    }
+  }
+
+  @override
+  void dispose() {
+    if (mounted) {
+      gameProvider.clearGameOverCallback();
+    }
+    super.dispose();
+  }
 
   void _handlePause(BuildContext context) {
     context.read<GameProvider>().togglePause();
