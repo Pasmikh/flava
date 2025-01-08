@@ -1,3 +1,4 @@
+import 'package:flava/models/events/strategic_events.dart';
 import 'package:flutter/material.dart';
 import 'package:flava/models/game_mode.dart';
 import 'package:flava/models/player.dart';
@@ -34,6 +35,7 @@ class GameState {
   final GameInterruption? currentInterruption;
   final String? currentEventDescription;
   final String? currentChoice;
+  final List<StrategicEvent> scheduledEvents;
 
   //
 
@@ -51,6 +53,7 @@ class GameState {
     this.currentInterruption,
     this.currentEventDescription,
     this.currentChoice,
+    this.scheduledEvents = const [],
     // this.currentEvent,
     // this.choices = const [],
   });
@@ -66,30 +69,34 @@ class GameState {
   // Create a new state with updated values
   GameState copyWith(GameStateUpdate update) {
     return GameState(
-        gameMode: update.gameMode ?? gameMode,
-        players: update.players ?? players,
-        currentPlayerIndex: update.currentPlayerIndex ?? currentPlayerIndex,
-        currentRound: update.currentRound ?? currentRound,
-        status: update.status ?? status,
-        turnRotationClockwise:
-            update.turnRotationClockwise ?? turnRotationClockwise,
-        turnTimeLeft: update.turnTimeLeft ?? turnTimeLeft,
-        additionalTime: update.additionalTime ?? additionalTime,
-        currentObject: update.clearCurrentObject
-            ? null
-            : (update.currentObject ?? currentObject),
-        currentObjectColor: update.clearCurrentObjectColor
-            ? null
-            : (update.currentObjectColor ?? currentObjectColor),
-        currentInterruption: update.clearCurrentInterruption
-            ? null
-            : (update.currentInterruption ?? currentInterruption),
-        currentEventDescription: update.clearCurrentEventDescription
-            ? null
-            : (update.currentEventDescription ?? currentEventDescription),
-        currentChoice: update.clearCurrentChoice
-            ? null
-            : (update.currentChoice ?? currentChoice));
+      gameMode: update.gameMode ?? gameMode,
+      players: update.players ?? players,
+      currentPlayerIndex: update.currentPlayerIndex ?? currentPlayerIndex,
+      currentRound: update.currentRound ?? currentRound,
+      status: update.status ?? status,
+      turnRotationClockwise:
+          update.turnRotationClockwise ?? turnRotationClockwise,
+      turnTimeLeft: update.turnTimeLeft ?? turnTimeLeft,
+      additionalTime: update.additionalTime ?? additionalTime,
+      currentObject: update.clearCurrentObject
+          ? null
+          : (update.currentObject ?? currentObject),
+      currentObjectColor: update.clearCurrentObjectColor
+          ? null
+          : (update.currentObjectColor ?? currentObjectColor),
+      currentInterruption: update.clearCurrentInterruption
+          ? null
+          : (update.currentInterruption ?? currentInterruption),
+      currentEventDescription: update.clearCurrentEventDescription
+          ? null
+          : (update.currentEventDescription ?? currentEventDescription),
+      currentChoice: update.clearCurrentChoice
+          ? null
+          : (update.currentChoice ?? currentChoice),
+      scheduledEvents: update.clearScheduledEvents
+          ? []
+          : (update.scheduledEvents ?? scheduledEvents),
+    );
     // currentEvent: update.clearCurrentEvent
     //     ? null
     //     : (update.currentEvent ?? currentEvent),
@@ -110,6 +117,7 @@ class GameStateUpdate {
   final Color? currentObjectColor;
   final GameInterruption? currentInterruption;
   final String? currentEventDescription;
+  final List<StrategicEvent>? scheduledEvents;
   // final List<String>? choices;
   final String? currentChoice;
   final bool clearCurrentObject;
@@ -117,27 +125,27 @@ class GameStateUpdate {
   final bool clearCurrentInterruption;
   final bool clearCurrentEventDescription;
   final bool clearCurrentChoice;
+  final bool clearScheduledEvents;
 
-  GameStateUpdate({
-    this.gameMode,
-    this.players,
-    this.currentPlayerIndex,
-    this.currentRound,
-    this.status,
-    this.turnRotationClockwise,
-    this.turnTimeLeft,
-    this.additionalTime,
-    this.currentObject,
-    this.currentObjectColor,
-    this.currentInterruption,
-    // this.currentEvent,
-    // this.choices,
-    this.currentEventDescription,
-    this.currentChoice,
-    this.clearCurrentObject = false,
-    this.clearCurrentObjectColor = false,
-    this.clearCurrentInterruption = false,    
-    this.clearCurrentEventDescription = false,
-    this.clearCurrentChoice = false,
-  });
+  GameStateUpdate(
+      {this.gameMode,
+      this.players,
+      this.currentPlayerIndex,
+      this.currentRound,
+      this.status,
+      this.turnRotationClockwise,
+      this.turnTimeLeft,
+      this.additionalTime,
+      this.currentObject,
+      this.currentObjectColor,
+      this.currentInterruption,
+      this.scheduledEvents,
+      this.currentEventDescription,
+      this.currentChoice,
+      this.clearCurrentObject = false,
+      this.clearCurrentObjectColor = false,
+      this.clearCurrentInterruption = false,
+      this.clearCurrentEventDescription = false,
+      this.clearCurrentChoice = false,
+      this.clearScheduledEvents = false});
 }

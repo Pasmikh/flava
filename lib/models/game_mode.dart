@@ -72,9 +72,12 @@ abstract class GameMode {
       return 0.0;
     }
     // Increase probability with rounds. After round 7, it grows linearly by 1/7 per round.
-    return keyObjectProbability *
-        (math.max(keyProbabilityGrowthRounds, currentRound) /
+    double adjustedProbability = keyObjectProbability *
+      (math.max(keyProbabilityGrowthRounds, currentRound) /
             keyProbabilityGrowthRounds);
+    
+    // Probability maxes out at 25%
+    return math.min(adjustedProbability, 0.25);
   }
 
   double getBaseEventProbability(EventType type) {
@@ -201,11 +204,5 @@ class MasterGameMode extends GameMode {
     final decayFactor = 0.5;
     return minTurnLength +
         (base - minTurnLength) * math.exp(-decayFactor * currentRound);
-  }
-
-  @override
-  double calculateKeyProbability(int currentRound, int currentKeyCount) {
-    final base = super.calculateKeyProbability(currentRound, currentKeyCount);
-    return base * (1 + currentRound / 20);
   }
 }

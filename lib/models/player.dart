@@ -29,9 +29,6 @@ class Player {
     EventType.strategic: 0.0,
   };
 
-  // Strategic events
-  Map<GameEvent, int> strategicEvents = {};
-
   Player({
     required this.name,
   }) : id = math.Random().nextInt(1000000);

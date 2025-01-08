@@ -23,7 +23,6 @@ class GameProvider extends ChangeNotifier {
   final StorageService _storageService;
   Timer? _gameTimer;
   late int _gameId;
-  late int _userId;
   int playerTurnCount = 1;
 
   GameProvider({
@@ -60,6 +59,7 @@ class GameProvider extends ChangeNotifier {
     final currentPlayerIndex =
         0; // DateTime.now().millisecondsSinceEpoch % players.length;
     playerTurnCount = 1;
+    _gameId = DateTime.now().millisecondsSinceEpoch;
 
     _state = _state.copyWith(GameStateUpdate(
       currentRound: 1,
@@ -81,7 +81,7 @@ class GameProvider extends ChangeNotifier {
 
   void setupTestGame() {
     initializeGame(
-      playerNames: ['Andy', 'Bob'],// 'Celene', 'Dwayne'],
+      playerNames: ['Andy', 'Bob'], // 'Celene', 'Dwayne'],
       gameMode: FunGameMode(),
     );
   }
@@ -169,7 +169,7 @@ class GameProvider extends ChangeNotifier {
     await _audioService.playEndTurn();
 
     // Check if round is complete
-    // TODO: Fix round end bug when last player is eliminated. 
+    // TODO: Fix round end bug when last player is eliminated.
     // Interruption is shown after 1st player then, not before.
     if (playerTurnCount >= _state.players.length) {
       if (_state.gameMode is MasterGameMode) {
@@ -225,6 +225,22 @@ class GameProvider extends ChangeNotifier {
     // Increase event probabilities
     _accumulateEventProbabilities();
 
+    // Check for strategic events
+    if (_state.scheduledEvents.isNotEmpty) {
+      for (var event in _state.scheduledEvents) {
+        if (event.triggerRound == _state.currentRound &&
+            event.triggerPlayerIndex == _state.currentPlayerIndex) {
+          _handleInterruption(EventInterruption(event.executionEvent));
+          // Remove event from list
+          _state = _state.copyWith(GameStateUpdate(
+            scheduledEvents:
+                _state.scheduledEvents.where((e) => e != event).toList(),
+          ));
+          return;
+        }
+      }
+    }
+
     // Calculate whether event should be triggered
     final GameEvent? event = EventManager.createEvent(_state);
 
@@ -278,15 +294,16 @@ class GameProvider extends ChangeNotifier {
 
   void _resetTurnTimeLeft() {
     _state = _state.copyWith(GameStateUpdate(
-      turnTimeLeft: _state.gameMode.calculateTurnLength(_state.players.length, _state.currentRound) + _state.additionalTime
-    ));
+        turnTimeLeft: _state.gameMode.calculateTurnLength(
+                _state.players.length, _state.currentRound) +
+            _state.additionalTime));
   }
 
   void _handleWinTestInterruptionChoice(
       WinTestInterruption interruption, int choice) {
     switch (interruption.phase) {
       case WinTestPhase.confirmation:
-        _state = _state.copyWith(GameStateUpdate(          
+        _state = _state.copyWith(GameStateUpdate(
           status: GameStatus.winTest,
           additionalTime: interruption.additionalTime,
           clearCurrentObject: true,
@@ -307,7 +324,7 @@ class GameProvider extends ChangeNotifier {
       case WinTestPhase.result:
         if (choice == 0) {
           _handleWinSuccess();
-          if (_state.status == GameStatus.gameOver){
+          if (_state.status == GameStatus.gameOver) {
             return;
           }
         } else {
@@ -398,8 +415,7 @@ class GameProvider extends ChangeNotifier {
     currentPlayer.isEliminated = true;
 
     _state = _state.copyWith(
-        GameStateUpdate(players: _state.players.updatePlayer(currentPlayer))
-        );
+        GameStateUpdate(players: _state.players.updatePlayer(currentPlayer)));
 
     if (_checkGameFinish()) {
       _endGame();
@@ -420,7 +436,7 @@ class GameProvider extends ChangeNotifier {
 
   Future<void> _endGame() async {
     _gameTimer?.cancel();
-  
+
     _state = _state.copyWith(GameStateUpdate(
       status: GameStatus.gameOver,
       // players: updatedPlayers,
