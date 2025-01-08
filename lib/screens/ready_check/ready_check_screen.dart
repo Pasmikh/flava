@@ -1,3 +1,4 @@
+import 'package:flava/services/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,7 +10,11 @@ import '../../config/routes.dart';
 class ReadyCheckScreen extends StatelessWidget {
   const ReadyCheckScreen({super.key});
 
-  void _startGame(BuildContext context) {
+  void _startGame(BuildContext context) async {
+    await AudioService.getInstance().initialize();
+
+    if (!context.mounted) return;
+
     final gameProvider = context.read<GameProvider>();
     gameProvider.startGame();
     Navigator.pushReplacementNamed(context, AppRoutes.game);

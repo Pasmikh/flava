@@ -4,12 +4,13 @@ import 'logging_service.dart';
 
 class AudioService {
   static AudioService? _instance;
-  final AudioPlayer _heartbeatSlowPlayer;
-  final AudioPlayer _heartbeatNormalPlayer;
-  final AudioPlayer _heartbeatFastPlayer;
-  final AudioPlayer _endTurnPlayer;
-  final AudioPlayer _eliminatePlayer;
-  final AudioPlayer _winPlayer;
+  late final AudioPlayer _heartbeatSlowPlayer;
+  late final AudioPlayer _heartbeatNormalPlayer;
+  late final AudioPlayer _heartbeatFastPlayer;
+  late final AudioPlayer _endTurnPlayer;
+  late final AudioPlayer _eliminatePlayer;
+  late final AudioPlayer _winPlayer;
+  bool _isInitialized = false;
 
   final LoggingService _loggingService = LoggingService();
 
@@ -21,21 +22,57 @@ class AudioService {
   static const Duration _minHeartbeatInterval = Duration(milliseconds: 100);
   static const double _fastHeartbeatThreshold = 2.0;
   static const double _normalHeartbeatThreshold = 4.0;
+
   // Private constructor
-  AudioService._({
-    required AudioPlayer heartbeatSlowPlayer,
-    required AudioPlayer heartbeatNormalPlayer,
-    required AudioPlayer heartbeatFastPlayer,
-    required AudioPlayer endTurnPlayer,
-    required AudioPlayer eliminatePlayer,
-    required AudioPlayer winPlayer,
-  })  : _heartbeatSlowPlayer = heartbeatSlowPlayer,
-        _heartbeatNormalPlayer = heartbeatNormalPlayer,
-        _heartbeatFastPlayer = heartbeatFastPlayer,
-        _endTurnPlayer = endTurnPlayer,
-        _eliminatePlayer = eliminatePlayer,
-        _winPlayer = winPlayer {
-    // Set up completion listeners for all players
+  AudioService._();
+
+  static AudioService getInstance() {
+    _instance ??= AudioService._();
+    return _instance!;
+  }
+
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    // Create players for each sound effect
+    _heartbeatSlowPlayer = AudioPlayer();
+    _heartbeatNormalPlayer = AudioPlayer();
+    _heartbeatFastPlayer = AudioPlayer();
+    _endTurnPlayer = AudioPlayer();
+    _eliminatePlayer = AudioPlayer();
+    _winPlayer = AudioPlayer();
+
+    // Configure all players
+    for (final player in [
+      _heartbeatSlowPlayer,
+      _heartbeatNormalPlayer,
+      _heartbeatFastPlayer,
+      _endTurnPlayer,
+      _eliminatePlayer,
+      _winPlayer,
+    ]) {
+      await player.setReleaseMode(ReleaseMode.stop);
+    }
+
+    // Load sound assets
+    await Future.wait([
+      _heartbeatSlowPlayer
+              .setSource(AssetSource('sounds/heartbeat_slow.wav')) ??
+          Future.value(),
+      _heartbeatNormalPlayer
+              .setSource(AssetSource('sounds/heartbeat_normal.wav')) ??
+          Future.value(),
+      _heartbeatFastPlayer
+              .setSource(AssetSource('sounds/heartbeat_fast.wav')) ??
+          Future.value(),
+      _endTurnPlayer.setSource(AssetSource('sounds/end_turn.wav')) ??
+          Future.value(),
+      _eliminatePlayer.setSource(AssetSource('sounds/eliminate.wav')) ??
+          Future.value(),
+      _winPlayer.setSource(AssetSource('sounds/win.wav')) ?? Future.value(),
+    ]);
+
+    // Set up completion listeners
     for (final player in [
       _heartbeatSlowPlayer,
       _heartbeatNormalPlayer,
@@ -48,55 +85,12 @@ class AudioService {
         _isSoundPlaying = false;
       });
     }
-  }
 
-  static Future<AudioService> initialize() async {
-    if (_instance != null) return _instance!;
-
-    // Create players for each sound effect
-    final heartbeatSlowPlayer = AudioPlayer();
-    final heartbeatNormalPlayer = AudioPlayer();
-    final heartbeatFastPlayer = AudioPlayer();
-    final endTurnPlayer = AudioPlayer();
-    final eliminatePlayer = AudioPlayer();
-    final winPlayer = AudioPlayer();
-
-    // Configure all players
-    for (final player in [
-      heartbeatSlowPlayer,
-      heartbeatNormalPlayer,
-      heartbeatFastPlayer,
-      endTurnPlayer,
-      eliminatePlayer,
-      winPlayer,
-    ]) {
-      await player.setReleaseMode(ReleaseMode.stop);
-    }
-
-    // Load sound assets
-    await Future.wait([
-      heartbeatSlowPlayer.setSource(AssetSource('sounds/heartbeat_slow.wav')),
-      heartbeatNormalPlayer
-          .setSource(AssetSource('sounds/heartbeat_normal.wav')),
-      heartbeatFastPlayer.setSource(AssetSource('sounds/heartbeat_fast.wav')),
-      endTurnPlayer.setSource(AssetSource('sounds/end_turn.wav')),
-      eliminatePlayer.setSource(AssetSource('sounds/eliminate.wav')),
-      winPlayer.setSource(AssetSource('sounds/win.wav')),
-    ]);
-
-    _instance = AudioService._(
-      heartbeatSlowPlayer: heartbeatSlowPlayer,
-      heartbeatNormalPlayer: heartbeatNormalPlayer,
-      heartbeatFastPlayer: heartbeatFastPlayer,
-      endTurnPlayer: endTurnPlayer,
-      eliminatePlayer: eliminatePlayer,
-      winPlayer: winPlayer,
-    );
-
-    return _instance!;
+    _isInitialized = true;
   }
 
   Future<void> playHeartbeat(double timeLeft) async {
+    if (!_isInitialized) return;
     // Check if enough time has passed since last heartbeat
     final now = DateTime.now();
     if (_lastHeartbeatTime != null &&
@@ -136,24 +130,28 @@ class AudioService {
   }
 
   Future<void> playEndTurn() async {
+    if (!_isInitialized) return;
     await stopAll();
     _isSoundPlaying = true;
     await _endTurnPlayer.resume();
   }
 
   Future<void> playEliminate() async {
+    if (!_isInitialized) return;
     await stopAll();
     _isSoundPlaying = true;
     await _eliminatePlayer.resume();
   }
 
   Future<void> playWin() async {
+    if (!_isInitialized) return;
     await stopAll();
     _isSoundPlaying = true;
     await _winPlayer.resume();
   }
 
   Future<void> stopHeartbeats() async {
+    if (!_isInitialized) return;
     await Future.wait([
       _heartbeatSlowPlayer.stop(),
       _heartbeatNormalPlayer.stop(),
@@ -162,6 +160,7 @@ class AudioService {
   }
 
   Future<void> stopAll() async {
+    if (!_isInitialized) return;
     await Future.wait([
       _heartbeatSlowPlayer.stop(),
       _heartbeatNormalPlayer.stop(),
@@ -174,6 +173,7 @@ class AudioService {
   }
 
   String playerName(AudioPlayer player) {
+    if (!_isInitialized) return 'Not initialized';
     if (identical(player, _heartbeatSlowPlayer)) return 'Heartbeat slow';
     if (identical(player, _heartbeatNormalPlayer)) return 'Heartbeat normal';
     if (identical(player, _heartbeatFastPlayer)) return 'Heartbeat fast';
@@ -184,6 +184,7 @@ class AudioService {
   }
 
   Future<void> dispose() async {
+    if (!_isInitialized) return;
     await stopAll();
     await Future.wait([
       _heartbeatSlowPlayer.dispose(),

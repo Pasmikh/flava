@@ -21,15 +21,14 @@ class GameProvider extends ChangeNotifier {
   final LoggingService _loggingService = LoggingService();
   final AudioService _audioService;
   final StorageService _storageService;
-  Timer? _gameTimer;  
+  Timer? _gameTimer;
   late int _gameId;
   int playerTurnCount = 1;
-  bool skipNextEndRoundSound = false;  
+  bool skipNextEndRoundSound = false;
 
   GameProvider({
-    required AudioService audioService,
     required StorageService storageService,
-  })  : _audioService = audioService,
+  })  : _audioService = AudioService.getInstance(),
         _storageService = storageService,
         _state = GameState(
           gameMode: BeginnerGameMode(),
@@ -145,8 +144,10 @@ class GameProvider extends ChangeNotifier {
       return;
     }
 
-    if (_state.turnTimeLeft <= 0) {      
-      skipNextEndRoundSound ? skipNextEndRoundSound = false : await _audioService.playEndTurn();
+    if (_state.turnTimeLeft <= 0) {
+      skipNextEndRoundSound
+          ? skipNextEndRoundSound = false
+          : await _audioService.playEndTurn();
       await _handleTurnEnd();
     }
 
@@ -166,7 +167,7 @@ class GameProvider extends ChangeNotifier {
           WinTestInterruption(null, phase: WinTestPhase.result));
       return;
     }
-    _gameTimer?.cancel();    
+    _gameTimer?.cancel();
 
     // Check if round is complete
     // TODO: Fix round end bug when last player is eliminated.
@@ -253,7 +254,7 @@ class GameProvider extends ChangeNotifier {
   }
 
   void _handleInterruption(GameInterruption interruption) {
-    _gameTimer?.cancel();    
+    _gameTimer?.cancel();
 
     _state = _state.copyWith(GameStateUpdate(
         status: GameStatus.interrupted,
@@ -447,7 +448,7 @@ class GameProvider extends ChangeNotifier {
       clearCurrentObjectColor: true,
       clearCurrentInterruption: true,
     ));
-    
+
     await _recordGameEnd();
 
     notifyListeners();

@@ -24,11 +24,11 @@ void main() async {
   ]);
 
   // Initialize services
-  final audioService = await AudioService.initialize();
+  // final audioService = await AudioService.initialize();
 
   // Create game provider instance
   final gameProvider = GameProvider(
-    audioService: audioService,
+    // audioService: audioService,
     storageService: StorageService(),
   );
 
