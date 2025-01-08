@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../../extensions/player_list_extension.dart';
 import '../game_state.dart';
 import '../game_event.dart';
+import '../../config/constants.dart';
 
 final List<GameEvent Function(GameState)> otherEvents = [
   createSwitchHandsEvent, // event_switch_hands
@@ -16,8 +17,8 @@ final List<GameEvent Function(GameState)> otherEvents = [
 
 GameEvent createSwitchHandsEvent(GameState state) {
   return GameEvent(
-    description: 'ALL players switch objects between hands. '
-        'You can hold different colors together during this turn.',
+    description: 'ВСЕ переложите объекты из правой руки в левую и наоборот. '
+        'В этот ход можно держать разные цвета вместе.',
     type: EventType.other,
     requiresConfirmation: true,
     choices: EventChoices(['Confirm'], (str) => str),
@@ -30,9 +31,8 @@ GameEvent createSwitchHandsEvent(GameState state) {
 
 GameEvent createGiveOneRightEvent(GameState state) {
   return GameEvent(
-    description:
-        'ALL players place an object in front of the player to their RIGHT. '
-        'After timer starts, take the object in front of you.',
+    description: 'ВСЕ кладут объект перед игроком СПРАВА. '
+        'После старта таймера возьмите объект перед вами.',
     type: EventType.other,
     requiresConfirmation: true,
     choices: EventChoices(['Confirm'], (str) => str),
@@ -45,9 +45,8 @@ GameEvent createGiveOneRightEvent(GameState state) {
 
 GameEvent createGiveOneLeftEvent(GameState state) {
   return GameEvent(
-    description:
-        'ALL players place an object in front of the player to their LEFT. '
-        'After timer starts, take the object in front of you.',
+    description: 'ВСЕ кладут объект перед игроком СЛЕВА. '
+        'После старта таймера возьмите объект перед вами.',
     type: EventType.other,
     requiresConfirmation: true,
     choices: EventChoices(['Confirm'], (str) => str),
@@ -60,8 +59,8 @@ GameEvent createGiveOneLeftEvent(GameState state) {
 
 GameEvent createGiveOneAnyEvent(GameState state) {
   return GameEvent(
-    description: 'ALL players place an object in front of ANY player. '
-        'After timer starts, take the object in front of you.',
+    description: 'ВСЕ кладут объект перед ЛЮБЫМ игроком. '
+        'После старта таймера возьмите объекты перед вами.',
     type: EventType.other,
     requiresConfirmation: true,
     choices: EventChoices(['Confirm'], (str) => str),
@@ -81,8 +80,8 @@ GameEvent createStealKeyEvent(GameState state) {
   );
 
   return GameEvent(
-    description: 'Choose a player. If they have a key object, '
-        'they place it in front of you. After timer starts, take it.',
+    description: 'Выбери игрока. Если у него есть ${AppConstants.keyObject}, '
+        'он кладет его перед тобой. После старта таймера, возьми его.',
     type: EventType.other,
     requiresConfirmation: true,
     choices: choices,
@@ -116,7 +115,9 @@ GameEvent createExchangeHandsRedEvent(GameState state) {
   );
 
   return GameEvent(
-    description: 'Choose a player. You will exchange all your red objects.',
+    description:
+        'Выбери игрока. Вы кладете все свои красные объекты друг перед другом. '
+        'После старта таймера возьмите их.',
     type: EventType.other,
     requiresConfirmation: true,
     choices: choices,
@@ -151,7 +152,9 @@ GameEvent createExchangeHandsGreenEvent(GameState state) {
   );
 
   return GameEvent(
-    description: 'Choose a player. You will exchange all your green objects.',
+    description:
+        'Выбери игрока. Вы кладете все свои зеленые объекты друг перед другом. '
+        'После старта таймера возьмите их.',
     type: EventType.other,
     requiresConfirmation: true,
     choices: choices,

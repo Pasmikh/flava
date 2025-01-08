@@ -21,8 +21,8 @@ GameEvent createDropThreeEvent(GameState state) {
   );
 
   return GameEvent(
-    description: 'Choose a player. They will drop a red object, '
-        'a green object, and a key object',
+    description:
+        'Выбери игрока. Он сбросит красный и зеленый объект разных форм и ${AppConstants.keyObject}',
     type: EventType.drop,
     requiresConfirmation: true,
     additionalTime: 1,
@@ -76,7 +76,7 @@ GameEvent createDropObjectEvent(GameState state) {
   }
 
   return GameEvent(
-    description: 'Choose an object. All players will drop all such objects',
+    description: 'Выбери объект. ВСЕ игроки сбрасывают все такие объекты',
     type: EventType.drop,
     requiresConfirmation: true,
     choices: EventChoices(availableObjects.toList(), (object) => object),
@@ -107,7 +107,7 @@ GameEvent createDropObjectEvent(GameState state) {
 
 GameEvent createAllDropOneEvent(GameState state) {
   return GameEvent(
-    description: 'ALL players drop any object',
+    description: 'ВСЕ игроки сбрасывают любой объект',
     type: EventType.drop,
     choices: EventChoices(['Confirm'], (str) => str),
     executeEvent: (currentState, _) {
@@ -164,7 +164,7 @@ GameEvent createDropKeyObjectEvent(GameState state) {
 
   return GameEvent(
     description:
-        'Choose an object. All players holding that object will drop a key object',
+        'Выбери объект. Все у кого есть этот объект сбрасывают ${AppConstants.keyObject}',
     type: EventType.drop,
     requiresConfirmation: true,
     choices: EventChoices(availableObjects.toList(), (object) => object),

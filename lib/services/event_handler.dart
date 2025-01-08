@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flava/services/logging_service.dart';
+import 'package:flava/models/game_mode.dart';
 
 import '../config/constants.dart';
 import '../models/events/take_events.dart';
@@ -14,30 +14,33 @@ import '../models/game_event.dart';
 class EventManager {
   static GameEvent? createEvent(GameState state) {
     final GameEvent? event;
-    // For testing purposes, we can force an event type
-    if (state.currentRound == 3) {
-      switch (state.currentPlayerIndex) {
-        case 0:
-          event = createTakeObjectFutureTakeKeyEvent(state);
-        case 1:
-          event = createTakeObjectFutureDropKeyEvent(state);
-        // case 2:
-        //   return createGiveOneAnyEvent(state);
-        // case 3:
-        //   return createStealKeyEvent(state);
-        default:
-          return null;
-      }
+    // Force an event type
+    if (state.currentRound == 1 &&
+        state.currentPlayerIndex == 0 &&
+        state.gameMode is MasterGameMode) {
+      event = createTakeThreeWarmupEvent(state);
+      // switch (state.currentPlayerIndex) {
+      //   case 0:
+      //     event = createTakeObjectFutureTakeKeyEvent(state);
+      //   case 1:
+      //     event = createTakeObjectFutureDropKeyEvent(state);
+      //   // case 2:
+      //   //   return createGiveOneAnyEvent(state);
+      //   // case 3:
+      //   //   return createStealKeyEvent(state);
+      //   default:
+      //     return null;
+    }
 
-      // } else if (state.currentRound == 4) {
-      //   switch (state.currentPlayerIndex) {
-      //     case 0: return createExchangeHandsRedEvent(state);
-      //     case 1: return createExchangeHandsGreenEvent(state);
-      //     // case 2: return createSwitchHandsEvent(state);
-      //     // case 3: return createGiveOneRightEvent(state);
-      //     default: return null;
-      //   }
-    } else {
+    // } else if (state.currentRound == 4) {
+    //   switch (state.currentPlayerIndex) {
+    //     case 0: return createExchangeHandsRedEvent(state);
+    //     case 1: return createExchangeHandsGreenEvent(state);
+    //     // case 2: return createSwitchHandsEvent(state);
+    //     // case 3: return createGiveOneRightEvent(state);
+    //     default: return null;
+    //   }
+    else {
       // Determine if we should trigger an event
       final EventType? eventType = rollEventType(state);
       if (eventType == null) return null;

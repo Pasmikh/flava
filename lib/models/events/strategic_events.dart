@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import '../game_state.dart';
 import '../game_event.dart';
 import '../../config/constants.dart';
-import '../../extensions/player_list_extension.dart';
 
 final List<StrategicEvent Function(GameState)> strategicEvents = [
   createTakeObjectFutureTakeKeyEvent,
@@ -48,7 +47,6 @@ class StrategicEvent extends GameEvent {
 StrategicEvent createTakeObjectFutureTakeKeyEvent(GameState state) {
   final roundsAhead = math.Random().nextInt(3) + 2;
   // Randomly choose red or green for both current and future trigger
-  final currentColor = math.Random().nextBool() ? 'red' : 'green';
   final currentObject = AppConstants
       .baseObjects[math.Random().nextInt(AppConstants.baseObjects.length)];
   final futureObject = AppConstants
@@ -56,8 +54,7 @@ StrategicEvent createTakeObjectFutureTakeKeyEvent(GameState state) {
 
   // Create the execution event that will trigger in the future
   final executionEvent = GameEvent(
-    description:
-        'All players with $futureObject take a ${AppConstants.keyObject}',
+    description: 'ВСЕ игроки с $futureObject берут ${AppConstants.keyObject}',
     type: EventType.take,
     choices: EventChoices(['Confirm'], (str) => str),
     executeEvent: (futureState, _) {
@@ -79,7 +76,7 @@ StrategicEvent createTakeObjectFutureTakeKeyEvent(GameState state) {
   // Create the initial strategic event
   return StrategicEvent(
     description:
-        'Take $currentObject ($currentColor). In $roundsAhead rounds, all players with $futureObject will take a ${AppConstants.keyObject}',
+        'Возьми $currentObject. Все игроки с $futureObject через $roundsAhead раунда возьмут ${AppConstants.keyObject}',
     type: EventType.strategic,
     choices: EventChoices(['Confirm'], (str) => str),
     requiresConfirmation: true,
@@ -89,19 +86,18 @@ StrategicEvent createTakeObjectFutureTakeKeyEvent(GameState state) {
     executionEvent: executionEvent,
     executeEvent: (currentState, _) {
       // Add the initial object to the current player
-      final updatedPlayer = currentState.currentPlayer.copyWith()
-        ..addObject(currentObject, currentColor);
-      return currentState.copyWith(GameStateUpdate(
-        players: currentState.players.updatePlayer(updatedPlayer),
-      ));
+      // final updatedPlayer = currentState.currentPlayer.copyWith()
+      //   ..addObject(currentObject, 'green');
+      // return currentState.copyWith(GameStateUpdate(
+      //   players: currentState.players.updatePlayer(updatedPlayer),
+      // ));
+      return currentState;
     },
   );
 }
 
 StrategicEvent createTakeObjectFutureDropKeyEvent(GameState state) {
   final roundsAhead = math.Random().nextInt(3) + 2;
-  // Randomly choose red or green for both current and future trigger
-  final currentColor = math.Random().nextBool() ? 'red' : 'green';
   final currentObject = AppConstants
       .baseObjects[math.Random().nextInt(AppConstants.baseObjects.length)];
   final futureObject = AppConstants
@@ -110,7 +106,7 @@ StrategicEvent createTakeObjectFutureDropKeyEvent(GameState state) {
   // Create the execution event that will trigger in the future
   final executionEvent = GameEvent(
     description:
-        'All players with $futureObject drop a ${AppConstants.keyObject}',
+        'ВСЕ игроки с $futureObject сбрасывают ${AppConstants.keyObject}',
     type: EventType.take,
     choices: EventChoices(['Confirm'], (str) => str),
     executeEvent: (futureState, _) {
@@ -132,7 +128,7 @@ StrategicEvent createTakeObjectFutureDropKeyEvent(GameState state) {
   // Create the initial strategic event
   return StrategicEvent(
     description:
-        'Take $currentObject ($currentColor). In $roundsAhead rounds, all players with $futureObject will drop a ${AppConstants.keyObject}',
+        'Возьми $currentObject. Все игроки с $futureObject через $roundsAhead раунда сбросят ${AppConstants.keyObject}',
     type: EventType.strategic,
     choices: EventChoices(['Confirm'], (str) => str),
     requiresConfirmation: true,
@@ -142,11 +138,12 @@ StrategicEvent createTakeObjectFutureDropKeyEvent(GameState state) {
     executionEvent: executionEvent,
     executeEvent: (currentState, _) {
       // Add the initial object to the current player
-      final updatedPlayer = currentState.currentPlayer.copyWith()
-        ..addObject(currentObject, currentColor);
-      return currentState.copyWith(GameStateUpdate(
-        players: currentState.players.updatePlayer(updatedPlayer),
-      ));
+      // final updatedPlayer = currentState.currentPlayer.copyWith()
+      //   ..addObject(currentObject, currentColor);
+      // return currentState.copyWith(GameStateUpdate(
+      //   players: currentState.players.updatePlayer(updatedPlayer),
+      // ));
+      return currentState;
     },
   );
 }

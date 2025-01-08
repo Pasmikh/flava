@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:flava/config/constants.dart';
+
 import '../game_state.dart';
 import '../game_event.dart';
 
@@ -11,7 +13,8 @@ final List<GameEvent Function(GameState)> winEvents = [
 
 GameEvent createWinDropKeysEvent(GameState state) {
   return GameEvent(
-    description: 'To win, drop all key objects without dropping other objects',
+    description:
+        'Для победы выложи все ${AppConstants.keyObject}, не уронив другие объекты',
     type: EventType.win,
     requiresConfirmation: true,
     choices: EventChoices(['Confirm'], (str) => str),
@@ -26,8 +29,9 @@ GameEvent createWinDropKeysEvent(GameState state) {
 
 GameEvent createWinSwitchHandsEvent(GameState state) {
   return GameEvent(
-    description: 'To win, switch objects between hands. '
-        'You can hold different colors together during this turn.',
+    description:
+        'Для победы переложи объекты из левой руки в правую и наоборот. '
+        'В этот ход можно держать разные цвета вместе.',
     type: EventType.win,
     requiresConfirmation: true,
     choices: EventChoices(['Confirm'], (str) => str),
@@ -42,8 +46,8 @@ GameEvent createWinSwitchHandsEvent(GameState state) {
 
 GameEvent createWinGiveTwoEvent(GameState state) {
   return GameEvent(
-    description: 'ALL players place two objects in front of you. '
-        'To win, take these objects.',
+    description: 'ВСЕ кладут по два объекта перед тобой.'
+        'Для победы возьми эти объекты.',
     type: EventType.win,
     requiresConfirmation: true,
     choices: EventChoices(['Confirm'], (str) => str),

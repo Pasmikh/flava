@@ -409,7 +409,8 @@ class GameProvider extends ChangeNotifier {
         WinTestInterruption(winEvent, phase: WinTestPhase.confirmation));
   }
 
-  void _handleWinSuccess() {
+  void _handleWinSuccess() async {
+    await _audioService.playWin();
     // If first to win, player is winner
     currentPlayer.isWinner = _state.players.every((player) => !player.isWinner);
     // After win, player is eliminated
@@ -446,8 +447,7 @@ class GameProvider extends ChangeNotifier {
       clearCurrentObjectColor: true,
       clearCurrentInterruption: true,
     ));
-
-    await _audioService.playWin();
+    
     await _recordGameEnd();
 
     notifyListeners();

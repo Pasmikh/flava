@@ -33,7 +33,7 @@ void main() async {
   );
 
   // Set up test game
-  gameProvider.setupTestGame();
+  // gameProvider.setupTestGame();
 
   runApp(
     MultiProvider(
@@ -57,8 +57,8 @@ class FlavaApp extends StatelessWidget {
       title: 'Flava',
       theme: FlavaTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      // initialRoute: AppRoutes.home,
-      initialRoute: AppRoutes.readyCheck, // For test
+      initialRoute: AppRoutes.home,
+      // initialRoute: AppRoutes.readyCheck, // For test
       routes: {
         AppRoutes.home: (context) => const HomeScreen(),
         AppRoutes.playerSetup: (context) => const PlayerSetupScreen(),

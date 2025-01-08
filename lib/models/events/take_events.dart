@@ -7,7 +7,7 @@ import '../game_state.dart';
 import '../game_event.dart';
 
 final List<GameEvent Function(GameState)> takeEvents = [
-  createTakeThreeWarmupEvent, // event_get_3_warmup
+  // createTakeThreeWarmupEvent, // event_get_3_warmup
   createTakeThreeEvent, // event_get_3
   createTakeAllGetOneEvent, // event_all_get_1
   createTakeAllGetKeyEvent, // event_all_get_key
@@ -29,8 +29,8 @@ GameEvent createTakeThreeEvent(GameState state) {
   );
 
   return GameEvent(
-    description: 'Choose a player. They will take a red object, '
-        'a green object, and a key object',
+    description:
+        'Выбери игрока. Он берет красный и зеленый объект разных форм и ${AppConstants.keyObject}',
     type: EventType.take,
     requiresConfirmation: true,
     choices: choices,
@@ -53,7 +53,8 @@ GameEvent createTakeThreeEvent(GameState state) {
 
 GameEvent createTakeThreeWarmupEvent(GameState state) {
   return GameEvent(
-    description: 'ALL players take three different red and green objects',
+    description:
+        'ВСЕ игроки берут по три разных красных и зеленых объекта, но не ${AppConstants.keyObject}',
     type: EventType.take,
     choices: EventChoices(['Confirm'], (str) => str),
     requiresConfirmation: true,
@@ -78,7 +79,7 @@ GameEvent createTakeThreeWarmupEvent(GameState state) {
 
 GameEvent createTakeAllGetOneEvent(GameState state) {
   return GameEvent(
-    description: 'ALL take any object, but NOT a key object',
+    description: 'ВСЕ берут любой объект, но НЕ ${AppConstants.keyObject}',
     type: EventType.take,
     choices: EventChoices(['Confirm'], (str) => str),
     executeEvent: (currentState, _) {
@@ -95,7 +96,7 @@ GameEvent createTakeAllGetOneEvent(GameState state) {
 
 GameEvent createTakeAllGetKeyEvent(GameState state) {
   return GameEvent(
-    description: 'ALL take a key object',
+    description: 'ВСЕ берут ${AppConstants.keyObject}',
     type: EventType.take,
     requiresConfirmation: true,
     isMidgame: true,
@@ -113,7 +114,8 @@ GameEvent createTakeAllGetKeyEvent(GameState state) {
 
 GameEvent createTakeTwoEvent(GameState state) {
   return GameEvent(
-    description: 'Take a red object and a green object',
+    description:
+        'Возьми красный и зеленый объекты разных форм, но не ${AppConstants.keyObject}',
     type: EventType.take,
     choices: EventChoices(['Confirm'], (str) => str),
     executeEvent: (currentState, _) {
@@ -130,12 +132,13 @@ GameEvent createTakeTwoEvent(GameState state) {
 }
 
 GameEvent createTakeRotateEvent(GameState state) {
-  final objectColor = math.Random().nextBool() ? 'red' : 'green';
+  final objectColor = math.Random().nextBool() ? 'красный' : 'зеленый';
   final randomObject = AppConstants
       .baseObjects[math.Random().nextInt(AppConstants.baseObjects.length)];
 
   return GameEvent(
-    description: 'Take $randomObject ($objectColor). Play direction reverses.',
+    description:
+        'Возьми $objectColor $randomObject. Ход идет в обратную сторону.',
     type: EventType.take,
     choices: EventChoices(['Confirm'], (str) => str),
     executeEvent: (currentState, _) {
@@ -157,7 +160,7 @@ GameEvent createTakeKeyMinNumCardsEvent(GameState state) {
 
   return GameEvent(
     description:
-        'Choose a number. All players with that many or more objects will take a key object',
+        'Выбери число. Все у кого столько или больше объектов - возьмут ${AppConstants.keyObject}',
     type: EventType.take,
     requiresConfirmation: true,
     isMidgame: true,
@@ -188,7 +191,7 @@ GameEvent createTakeKeyMaxNumCardsEvent(GameState state) {
 
   return GameEvent(
     description:
-        'Choose a number. All players with that many or fewer objects will take a key object',
+        'Выбери число. Все у кого столько или меньше объектов - возьмут ${AppConstants.keyObject}',
     type: EventType.take,
     requiresConfirmation: true,
     isMidgame: true,
@@ -241,7 +244,7 @@ GameEvent createTakeKeyObjectEvent(GameState state) {
 
   return GameEvent(
     description:
-        'Choose an object. All players holding that object will receive a key object',
+        'Выбери объект. Все у кого есть этот объект берут ${AppConstants.keyObject}',
     type: EventType.take,
     requiresConfirmation: true,
     choices: EventChoices(availableObjects.toList(), (object) => object),

@@ -24,9 +24,9 @@ class HomeScreen extends StatelessWidget {
                     letterSpacing: 2,
                   ),
                 ),
-                
+
                 const SizedBox(height: 48),
-                
+
                 // Main Actions
                 SizedBox(
                   width: double.infinity,
@@ -41,42 +41,42 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Secondary Actions
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => AppRoutes.navigateToStatistics(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: FlavaTheme.accentColor,
-                        ),
-                        child: Text(
-                          'Statistics',
-                          style: FlavaTheme.buttonTextStyle,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => AppRoutes.navigateToSettings(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: FlavaTheme.accentColor,
-                        ),
-                        child: Text(
-                          'Settings',
-                          style: FlavaTheme.buttonTextStyle,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                
+                // Row(
+                //   children: [
+                //     Expanded(
+                //       child: ElevatedButton(
+                //         onPressed: () => AppRoutes.navigateToStatistics(context),
+                //         style: ElevatedButton.styleFrom(
+                //           backgroundColor: FlavaTheme.accentColor,
+                //         ),
+                //         child: Text(
+                //           'Statistics',
+                //           style: FlavaTheme.buttonTextStyle,
+                //         ),
+                //       ),
+                //     ),
+                //     const SizedBox(width: 16),
+                //     Expanded(
+                //       child: ElevatedButton(
+                //         onPressed: () => AppRoutes.navigateToSettings(context),
+                //         style: ElevatedButton.styleFrom(
+                //           backgroundColor: FlavaTheme.accentColor,
+                //         ),
+                //         child: Text(
+                //           'Settings',
+                //           style: FlavaTheme.buttonTextStyle,
+                //         ),
+                //       ),
+                //     ),
+                //   ],
+                // ),
+
                 const SizedBox(height: 32),
-                
+
                 // Version Info
                 Text(
                   'Version ${AppConstants.appVersion}',
@@ -84,9 +84,9 @@ class HomeScreen extends StatelessWidget {
                     color: FlavaTheme.textColor.withAlpha(150),
                   ),
                 ),
-                
+
                 const Spacer(),
-                
+
                 // How to Play
                 TextButton(
                   onPressed: () => _showGameRules(context),
