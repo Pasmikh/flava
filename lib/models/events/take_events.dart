@@ -58,6 +58,7 @@ GameEvent createTakeThreeWarmupEvent(GameState state) {
     type: EventType.take,
     choices: EventChoices(['Confirm'], (str) => str),
     requiresConfirmation: true,
+    additionalTime: 5.0,
     executeEvent: (currentState, _) {
       final updatedPlayers = currentState.players.updateAllPlayers((player) {
         // Create copy of player and add objects
