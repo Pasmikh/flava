@@ -35,7 +35,7 @@ GameEvent createWinSwitchHandsEvent(GameState state) {
     type: EventType.win,
     requiresConfirmation: true,
     choices: EventChoices(['Confirm'], (str) => str),
-    additionalTime: math.min(state.currentRound * 1.3, 16.0),
+    additionalTime: math.min(state.currentRound * 0.5, 8.0),
     executeEvent: (currentState, _) {
       // Original logic just sets up the win condition
       // Actual win checking would not be handled in tracking
@@ -51,7 +51,7 @@ GameEvent createWinGiveTwoEvent(GameState state) {
     type: EventType.win,
     requiresConfirmation: true,
     choices: EventChoices(['Confirm'], (str) => str),
-    additionalTime: 2.0,
+    additionalTime: math.min(state.currentRound * 0.15, 2.0),
     executeEvent: (currentState, _) {
       return currentState;
     },

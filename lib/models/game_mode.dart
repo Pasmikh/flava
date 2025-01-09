@@ -28,7 +28,7 @@ abstract class GameMode {
   // Game rules
   final bool requiresEventConfirmation;
   final int minRoundForStrategicEvents;
-  final double additionalTimeForEvents;
+
 
   const GameMode({
     required this.name,
@@ -45,7 +45,6 @@ abstract class GameMode {
     required this.keyProbabilityGrowthRounds,
     required this.requiresEventConfirmation,
     required this.minRoundForStrategicEvents,
-    required this.additionalTimeForEvents,
   });
 
   // Default methods that can be overridden
@@ -125,8 +124,6 @@ class BeginnerGameMode extends GameMode {
               'requiresEventConfirmation'],
           minRoundForStrategicEvents: gameModeRules[GameModeType.beginner]![
               'minRoundForStrategicEvents'],
-          additionalTimeForEvents:
-              gameModeRules[GameModeType.beginner]!['additionalTimeForEvents'],
         );
 }
 
@@ -158,8 +155,6 @@ class FunGameMode extends GameMode {
               gameModeRules[GameModeType.fun]!['requiresEventConfirmation'],
           minRoundForStrategicEvents:
               gameModeRules[GameModeType.fun]!['minRoundForStrategicEvents'],
-          additionalTimeForEvents:
-              gameModeRules[GameModeType.fun]!['additionalTimeForEvents'],
         );
 }
 
@@ -192,19 +187,7 @@ class MasterGameMode extends GameMode {
               gameModeRules[GameModeType.master]!['requiresEventConfirmation'],
           minRoundForStrategicEvents:
               gameModeRules[GameModeType.master]!['minRoundForStrategicEvents'],
-          additionalTimeForEvents:
-              gameModeRules[GameModeType.master]!['additionalTimeForEvents'],
         );
-
-  @override
-  double calculateTurnLength(int playerCount, [int currentRound = 1]) {
-    // Example override
-    final base = super.calculateTurnLength(playerCount, currentRound);
-    final minTurnLength = 3.0;
-    final decayFactor = 0.5;
-    return minTurnLength +
-        (base - minTurnLength) * math.exp(-decayFactor * currentRound);
-  }
 }
 
 class MasterPlusGameMode extends MasterGameMode {

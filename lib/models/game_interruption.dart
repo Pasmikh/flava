@@ -48,7 +48,7 @@ class WinTestInterruption extends GameInterruption {
   bool get requiresConfirmation => phase == WinTestPhase.confirmation;
 
   @override
-  double get additionalTime => phase == WinTestPhase.test ? winEvent?.additionalTime ?? 0.0 : 0.0;
+  double get additionalTime => winEvent?.additionalTime ?? 0.0;
 }
 
 class RoundEndInterruption extends GameInterruption {
