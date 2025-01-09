@@ -132,20 +132,34 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
                   style: FlavaTheme.headerStyle,
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                Column(
                   children: [
-                    _GameModeButton(
-                      modeName: BeginnerGameMode().name,
-                      onPressed: () => _startGame(BeginnerGameMode()),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _GameModeButton(
+                          modeName: BeginnerGameMode().name,
+                          onPressed: () => _startGame(BeginnerGameMode()),
+                        ),
+                        _GameModeButton(
+                          modeName: FunGameMode().name,
+                          onPressed: () => _startGame(FunGameMode()),
+                        ),
+                      ],
                     ),
-                    _GameModeButton(
-                      modeName: FunGameMode().name,
-                      onPressed: () => _startGame(FunGameMode()),
-                    ),
-                    _GameModeButton(
-                      modeName: MasterGameMode().name,
-                      onPressed: () => _startGame(MasterGameMode()),
+                    const SizedBox(height: 16), // Add some spacing between rows
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _GameModeButton(
+                          modeName: MasterGameMode().name,
+                          onPressed: () => _startGame(MasterGameMode()),
+                        ),
+                        _GameModeButton(
+                          modeName: MasterPlusGameMode().name,
+                          onPressed: () => _startGame(MasterPlusGameMode()),
+                        ),
+                      ],
                     ),
                   ],
                 ),

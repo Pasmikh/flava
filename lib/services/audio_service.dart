@@ -57,19 +57,14 @@ class AudioService {
     // Load sound assets
     await Future.wait([
       _heartbeatSlowPlayer
-              .setSource(AssetSource('sounds/heartbeat_slow.wav')) ??
-          Future.value(),
+              .setSource(AssetSource('sounds/heartbeat_slow.wav')),
       _heartbeatNormalPlayer
-              .setSource(AssetSource('sounds/heartbeat_normal.wav')) ??
-          Future.value(),
+              .setSource(AssetSource('sounds/heartbeat_normal.wav')),
       _heartbeatFastPlayer
-              .setSource(AssetSource('sounds/heartbeat_fast.wav')) ??
-          Future.value(),
-      _endTurnPlayer.setSource(AssetSource('sounds/end_turn.wav')) ??
-          Future.value(),
-      _eliminatePlayer.setSource(AssetSource('sounds/eliminate.wav')) ??
-          Future.value(),
-      _winPlayer.setSource(AssetSource('sounds/win.wav')) ?? Future.value(),
+              .setSource(AssetSource('sounds/heartbeat_fast.wav')),
+      _endTurnPlayer.setSource(AssetSource('sounds/end_turn.wav')),
+      _eliminatePlayer.setSource(AssetSource('sounds/eliminate.wav')),
+      _winPlayer.setSource(AssetSource('sounds/win.wav')),
     ]);
 
     // Set up completion listeners

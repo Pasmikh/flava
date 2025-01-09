@@ -6,8 +6,8 @@ const Map<GameModeType, Map<String, dynamic>> gameModeRules = {
     'name': 'Learn',
     'description':
         'Perfect for first-time players. Slower pace and helpful prompts.',
-    'startTurnLength': 8.0,
-    'endTurnLength': 7.0,
+    'startTurnLength': 7.0,
+    'endTurnLength': 6.0,
     'takeEventProbability': 0.02,
     'dropEventProbability': 0.02,
     'otherEventProbability': 0.01,
@@ -25,7 +25,7 @@ const Map<GameModeType, Map<String, dynamic>> gameModeRules = {
     'description':
         'Balanced gameplay with exciting events. Recommended for casual players.',
     'startTurnLength': 6.0,
-    'endTurnLength': 7.0,
+    'endTurnLength': 6.0,
     'takeEventProbability': 0.012,
     'dropEventProbability': 0.01,
     'otherEventProbability': 0.015,
@@ -42,8 +42,8 @@ const Map<GameModeType, Map<String, dynamic>> gameModeRules = {
     'name': 'Master',
     'description':
         'Challenging gameplay with complex strategic events. For experienced players.',
-    'startTurnLength': 6.8,
-    'endTurnLength': 6.2,
+    'startTurnLength': 6.0,
+    'endTurnLength': 5.5,
     'takeEventProbability': 0.01,
     'dropEventProbability': 0.01,
     'otherEventProbability': 0.01,

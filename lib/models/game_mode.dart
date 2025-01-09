@@ -206,3 +206,17 @@ class MasterGameMode extends GameMode {
         (base - minTurnLength) * math.exp(-decayFactor * currentRound);
   }
 }
+
+class MasterPlusGameMode extends MasterGameMode {
+  MasterPlusGameMode()
+      : super();
+
+  @override
+  String get name => 'Master+';
+
+  @override
+  String get description => 'Master mode with randomized player order each round';
+
+  // Inherit all other properties from MasterGameMode
+  // The main difference will be handled in the game logic
+}

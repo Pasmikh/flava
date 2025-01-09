@@ -64,7 +64,7 @@ GameEvent createGiveOneAnyEvent(GameState state) {
     type: EventType.other,
     requiresConfirmation: true,
     choices: EventChoices(['Confirm'], (str) => str),
-    additionalTime: -1.0,
+    additionalTime: 1.0,
     executeEvent: (currentState, _) {
       return currentState;
     },
@@ -84,6 +84,7 @@ GameEvent createStealKeyEvent(GameState state) {
         'он кладет его перед тобой. После старта таймера, возьми его.',
     type: EventType.other,
     requiresConfirmation: true,
+    additionalTime: -1.0,
     choices: choices,
     executeEvent: (currentState, choiceIndex) {
       if (choiceIndex == null) return currentState;

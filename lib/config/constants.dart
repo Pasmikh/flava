@@ -37,10 +37,12 @@ class AppConstants {
     'Наперсток',
     'Вилка',
     'Ковид',
-    'Бусина',
+    // 'Бусина',
+    'Перо',
     'Перчик',
     'Прищепка',
-    'Головоломка'
+    // 'Головоломка'
+    'Лист'
   ];
 
   // Base key object
@@ -48,17 +50,19 @@ class AppConstants {
 
   // Object image mapping
   static const Map<String, String> objectImageNames = {
-    'Шнурок': 'shnurok',
-    'Червяк': 'poloska',
-    'Резинка': 'rezinka',
-    'Наперсток': 'naperstok',
-    'Вилка': 'vilka',
-    'Ковид': 'covid_big',
-    'Бусина': 'busina',
-    'Перчик': 'perchik',
-    'Прищепка': 'prischepka',
-    'Головоломка': 'golovolomka',
-    'Шарик': 'sharik',
+    'шнурок': 'shnurok',
+    'червяк': 'poloska',
+    'резинка': 'rezinka',
+    'наперсток': 'naperstok',
+    'вилка': 'vilka',
+    'ковид': 'covid_big',
+    // 'бусина': 'busina',
+    'перо': 'pero',
+    'перчик': 'perchik',
+    'прищепка': 'prischepka',
+    // 'головоломка': 'golovolomka',
+    'лист': 'list',
+    'шарик': 'sharik',
   };
 
   // Storage keys

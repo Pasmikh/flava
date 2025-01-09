@@ -1,3 +1,4 @@
+import 'package:flava/config/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flava/config/theme.dart';
 
@@ -60,30 +61,15 @@ class _ObjectDisplayState extends State<ObjectDisplay>
     final isRed = widget.objectColor == FlavaTheme.redObjectColor;
     final isGreen = widget.objectColor == FlavaTheme.greenObjectColor;
 
-    // Map object names to image paths
-    final objectMap = {
-      'ШНУРОК': 'shnurok',
-      'ЧЕРВЯК': 'poloska',
-      'РЕЗИНКА': 'rezinka',
-      'НАПЕРСТОК': 'naperstok',
-      'ВИЛКА': 'vilka',
-      'КОВИД': 'covid_big',
-      'БУСИНА': 'busina',
-      'ПЕРЧИК': 'perchik',
-      'ПРИЩЕПКА': 'prischepka',
-      'ГОЛОВОЛОМКА': 'golovolomka',
-      'ШАРИК': 'sharik',
-    };
-
     // Find the matching object
-    String? objectKey = objectMap.keys.firstWhere(
-      (key) => widget.objectName.toUpperCase().contains(key),
+    String? objectKey = AppConstants.objectImageNames.keys.firstWhere(
+      (key) => widget.objectName.toLowerCase().contains(key),
       orElse: () => '',
     );
 
     if (objectKey.isEmpty) return '';
 
-    String baseObject = objectMap[objectKey]!;
+    String baseObject = AppConstants.objectImageNames[objectKey]!;
     String color = isRed ? 'red' : (isGreen ? 'green' : '');
 
     return 'assets/images/${baseObject}_$color.jpg';

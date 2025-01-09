@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:flava/config/game_mode_rules.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/game_mode.dart';
@@ -261,7 +264,17 @@ class GameProvider extends ChangeNotifier {
         currentInterruption: interruption,
         clearCurrentChoice: true));
 
+    _skipChoiceIfNeeded(interruption); // Skips "Confirm" button in Master game mode
+
     notifyListeners();
+  }
+
+  void _skipChoiceIfNeeded(GameInterruption interruption) {
+    if (_state.gameMode is MasterGameMode 
+        && interruption is EventInterruption
+        && interruption.event.requiresConfirmation == false){
+          handleInterruptionChoice(0);
+    }
   }
 
   void handleInterruptionChoice(int choice) {
@@ -352,11 +365,22 @@ class GameProvider extends ChangeNotifier {
     playerTurnCount = 0;
     final newRound = _state.currentRound + 1;
 
-    _state = _state.copyWith(GameStateUpdate(
-      status: GameStatus.playing,
-      currentRound: newRound,
-      clearCurrentInterruption: true,
-    ));
+    if (_state.gameMode is MasterPlusGameMode){
+      final shuffledPlayers = List<Player>.from(_state.players)..shuffle();
+      _state = _state.copyWith(GameStateUpdate(
+        status: GameStatus.playing,
+        currentRound: newRound,
+        players: shuffledPlayers,
+        currentPlayerIndex: 0,  // Reset to first player in new order
+        clearCurrentInterruption: true,
+      ));
+    } else {
+      _state = _state.copyWith(GameStateUpdate(
+        status: GameStatus.playing,
+        currentRound: newRound,
+        clearCurrentInterruption: true,
+      ));
+    }
   }
 
   void _accumulateEventProbabilities() {
